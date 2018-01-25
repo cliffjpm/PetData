@@ -44,10 +44,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             } else {
                 if granted {
                     DispatchQueue.main.async {
-                        print("DEBUG: Access Granted")
+                        //print("DEBUG: Access Granted")
                         application.registerForRemoteNotifications()
                         application.delegate = self
-                        print("Application Delegate is: \(String(describing: application.delegate))")
+                        //print("Application Delegate is: \(String(describing: application.delegate))")
                     }
                 }
             }
