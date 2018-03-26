@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  PetDetailViewController.swift
 //  PetData
 //
 //  Created by Cliff Malcolm Anderson on 1/23/18.
@@ -8,27 +8,53 @@
 
 import UIKit
 import CloudKit
+import os.log
 
-class ViewController: UIViewController {
+class PetDetailViewController: UIViewController, UITextFieldDelegate {
 
     //MARK: Properties
     @IBOutlet weak var petName: UITextField!
-    @IBOutlet weak var saveButton: UIButton!
+    @IBOutlet weak var saveButton: UIBarButtonItem!
+    
+    var pet: Pet?
     
     //MARK: Actions
-    @IBAction func savePet(_ sender: Any) {
-        let record = CKRecord(recordType: RemoteRecord.pet, zoneID: ArendK9DB.share.zoneID)
-        //let record = CKRecord(recordType: RemoteRecord.pet)
-        record[RemotePet.petName] = petName.text! as NSString
+    /*@IBAction func savePet(_ sender: Any) {
+        let pet = Pet(petName: petName.text!)
+        pet.save()
+    }*/
+    
+    //MARK: Navigation
+    
+    // This method lets you configure a view controller before it's presented.
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         
-        ArendK9DB.share.privateDB.save(record) {
-            record, error in
-            if error != nil {
-                print(error!.localizedDescription)
-            } else {
-                print("Pet Record Saved")
-            }
-        }    
+        super.prepare(for: segue, sender: sender)
+        
+        // Configure the destination view controller only when the save button is pressed.
+        guard let button = sender as? UIBarButtonItem, button === saveButton else {
+            os_log("The save button was not pressed, cancelling", log: OSLog.default, type: .debug)
+            return
+        }
+        
+        //Set the pet that will be saved locally and to iCloud
+        pet = Pet(petName: petName.text!)
+        
+        //Save the pet to iCloud if available. This needs to move the unwind area of the TableView
+        
+        //pet.save()
+    }
+    
+    
+    //MARK: UITextFieldDelegate
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        // Hide the keyboard.
+        textField.resignFirstResponder()
+        return true
+    }
+    
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        //PUT YOUR CODE HERE
     }
     
     
@@ -44,6 +70,8 @@ class ViewController: UIViewController {
         //Subscribe to change notifications
         ArendK9DB.share.dbSubscribeToChange()
         
+        //Handle the text field's user input through delegate callbacks.
+        petName.delegate = self
         
         
         //Debug item to show NSHome. Allow me to confirm token creation and updates
@@ -55,6 +83,7 @@ class ViewController: UIViewController {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
+    
 
     //MARK: Custom Functions
     func testForICloud() {

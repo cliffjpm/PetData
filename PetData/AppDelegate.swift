@@ -71,6 +71,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         ArendK9DB.share.fetchChanges(in: notification.databaseScope) {
             completionHandler(.newData)
         }
+        
+        
     }
 
 

@@ -8,10 +8,11 @@
 
 import Foundation
 
-enum RemoteRecord {
+enum RemoteRecords {
     static let pet = "Pet"
 }
 
 enum RemotePet {
     static let petName = "PetName"
+    static let dob = "Birthday"
 }
