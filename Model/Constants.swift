@@ -15,4 +15,7 @@ enum RemoteRecords {
 enum RemotePet {
     static let petName = "PetName"
     static let dob = "Birthday"
+    static let petSex = "PetSex"
+    static let photo = "Photo"
+    static let vaccineDates = "VaccineDates"
 }
