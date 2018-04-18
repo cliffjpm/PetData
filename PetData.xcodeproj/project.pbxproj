@@ -90,11 +90,31 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		918DAA0420699B0A001FAED4 /* ViewControllers */ = {
+			isa = PBXGroup;
+			children = (
+				CF899572201774FE00E1C9F9 /* PetDetailViewController.swift */,
+				91FD7073201B787200E77CE5 /* PetTableViewCell.swift */,
+				91FD7077201B7B1D00E77CE5 /* PetTableViewController.swift */,
+				CF89957C201774FE00E1C9F9 /* LaunchScreen.storyboard */,
+			);
+			path = ViewControllers;
+			sourceTree = "<group>";
+		};
+		918DAA0520699B6D001FAED4 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
 		CF899564201774FD00E1C9F9 = {
 			isa = PBXGroup;
 			children = (
+				918DAA0520699B6D001FAED4 /* Data */,
+				918DAA0420699B0A001FAED4 /* ViewControllers */,
 				CF8995A22017776900E1C9F9 /* Model */,
-				CF89956F201774FE00E1C9F9 /* PetData */,
+				CF89956F201774FE00E1C9F9 /* App */,
 				CF899587201774FE00E1C9F9 /* PetDataTests */,
 				CF899592201774FE00E1C9F9 /* PetDataUITests */,
 				CF89956E201774FE00E1C9F9 /* Products */,
@@ -112,21 +132,17 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		CF89956F201774FE00E1C9F9 /* PetData */ = {
+		CF89956F201774FE00E1C9F9 /* App */ = {
 			isa = PBXGroup;
 			children = (
 				CF8995A12017750E00E1C9F9 /* PetData.entitlements */,
 				CF899570201774FE00E1C9F9 /* AppDelegate.swift */,
-				CF899572201774FE00E1C9F9 /* PetDetailViewController.swift */,
-				91FD7073201B787200E77CE5 /* PetTableViewCell.swift */,
-				91FD7077201B7B1D00E77CE5 /* PetTableViewController.swift */,
 				CF899574201774FE00E1C9F9 /* Main.storyboard */,
 				CF89957A201774FE00E1C9F9 /* Assets.xcassets */,
-				CF89957C201774FE00E1C9F9 /* LaunchScreen.storyboard */,
 				CF89957F201774FE00E1C9F9 /* Info.plist */,
 				CF899577201774FE00E1C9F9 /* PetData.xcdatamodeld */,
 			);
-			path = PetData;
+			path = App;
 			sourceTree = "<group>";
 		};
 		CF899587201774FE00E1C9F9 /* PetDataTests */ = {
@@ -483,10 +499,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = PetData/PetData.entitlements;
+				CODE_SIGN_ENTITLEMENTS = App/PetData.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = TREVM349M3;
-				INFOPLIST_FILE = PetData/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/App/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.ArenaK9.PetData;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -499,10 +515,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = PetData/PetData.entitlements;
+				CODE_SIGN_ENTITLEMENTS = App/PetData.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = TREVM349M3;
-				INFOPLIST_FILE = PetData/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/App/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.ArenaK9.PetData;
 				PRODUCT_NAME = "$(TARGET_NAME)";
