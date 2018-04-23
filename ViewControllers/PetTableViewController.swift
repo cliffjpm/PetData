@@ -8,6 +8,7 @@
 
 import UIKit
 import CloudKit
+import os.log
 
 class PetTableViewController: UITableViewController {
 
@@ -21,7 +22,31 @@ class PetTableViewController: UITableViewController {
         super.viewDidLoad()
 
         print("Using loadPets from viewDidLoad")
-        loadPets()
+        
+        //Confirm connectivity with iCloud
+        testForICloud()
+        
+        //Set custom zone
+        ArendK9DB.share.zoneSetup()
+        
+        //Subscribe to change notifications
+        ArendK9DB.share.dbSubscribeToChange()
+        
+        //Debug item to show NSHome. Allow me to confirm token creation and updates
+        //print("NS Home is: ")
+        //print(NSHomeDirectory())
+        
+        // Load any saved dogs, otherwise load sample data.
+        if let savedPets = loadPets() {
+            pets += savedPets
+        }
+        else if let savedPets = loadPetsLocal() {
+            pets += savedPets
+        }
+        else {
+            // Load the sample data.
+            loadSamples()
+        }
         
         NotificationCenter.default.addObserver(self, selector: #selector(PetTableViewController.loadPets), name: NSNotification.Name(rawValue: "load"), object: nil)
         
@@ -143,8 +168,37 @@ class PetTableViewController: UITableViewController {
         }
     }
     
-    //MARK: Properties and create an array of the new objects
-    @objc func loadPets() {
+    //MARK: Custom Functions
+    func testForICloud() {
+        //Test for iCloud Login
+        ArendK9DB.share.container.accountStatus { (accountStatus, error) in
+            switch accountStatus {
+            case .available:
+                print("iCloud Available")
+                //simple alert dialog
+                //let alert=UIAlertController(title: "Signed in to iCloud", message: "This application requires iCloud. You are successfully logged in. Thanks!", preferredStyle: UIAlertControllerStyle.alert);
+                //no event handler (just close dialog box)
+                //alert.addAction(UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel, handler: nil));
+                //show it
+            //self.present(alert, animated: true, completion: nil)
+            case .noAccount:
+                print("No iCloud account")
+                //simple alert dialog
+                let alert=UIAlertController(title: "Sign in to iCloud", message: "This application requires iCloud. Sign in to your iCloud account to write records. On the Home screen, launch Settings, tap iCloud, and enter your Apple ID. Turn iCloud Drive on. If you don't have an iCloud account, tap Create a new Apple ID", preferredStyle: UIAlertControllerStyle.alert);
+                //no event handler (just close dialog box)
+                alert.addAction(UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel, handler: nil));
+                //show it
+                self.present(alert, animated: true, completion: nil)
+            case .restricted:
+                print("iCloud restricted")
+            case .couldNotDetermine:
+                print("Unable to determine iCloud status")
+            }
+        }
+    }
+    
+    //MARK: Try to load pets from iCloud
+    @objc private func loadPets() -> [Pet]? {
         
         print("DEBUG: loadPets was called")
         
@@ -193,7 +247,104 @@ class PetTableViewController: UITableViewController {
                 }
             }
         }
+        return pets
     }
-
-
+    
+    //MARK: Try to load records from the local archive if no iCloud connectivity exists
+    private func loadPetsLocal() -> [Pet]?  {
+        return NSKeyedUnarchiver.unarchiveObject(withFile: Pet.ArchiveURL.path) as? [Pet]
+    }
+    
+    
+    //If no records exist, supply sample data for testing.
+    private func loadSamples(){
+        let photo1 = UIImage(named: "win")
+        let photo2 = UIImage(named: "suki")
+        let photo3 = UIImage(named: "albus")
+        let today = Date()
+        
+        /*  Set up three data types:
+         an array of Vaccine Types
+         and array of the Dates of Occurance and
+         Dictionary of the types (String) and the array of days (Dates) they occurred*/
+        var vaccineTypes = [String]()
+        var vaccineOccurances = [Date]()
+        var vaccines: [String: Array<Date>?] = [:]
+        
+        //Date formatter with default dates for testing
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy/MM/dd"
+        let day1 = formatter.date(from: "2016/10/08")
+        let day2 = formatter.date(from: "2018/11/10")
+        let day3 = formatter.date(from: "2017/12/09")
+        
+        
+        //Set up the types available
+        vaccineTypes = ["Rabies",  "Flea & Tick", "HeartGuard"]
+        
+        //Create an emply array of Dictionary
+        vaccines = [vaccineTypes[0]: nil, vaccineTypes[1]: nil, vaccineTypes[2]: nil]
+        
+        //Use the dates to set up an array of vaccine occurances
+        vaccineOccurances = [day1!, day2!, day3!]
+        //sort the dates
+        vaccineOccurances.sort()
+        
+        //vaccineOccurances.max()
+        /*for dateOfOccurances in vaccineOccurances{
+         //print(dateOfOccurances)
+         }*/
+        
+        
+        //Set up some a sample of vaccines and occurances as Dictionary (String of  types + arrays of occurances)
+        vaccines = [vaccineTypes[0]: vaccineOccurances, vaccineTypes[1]: vaccineOccurances, vaccineTypes[2]: vaccineOccurances]
+        
+        //Add a date to one in the array
+        vaccines["Rabies"]??.append(formatter.date(from: "2020/10/08")!)
+        
+        /*for meds in vaccines{
+         print(meds.key + "")
+         
+         let dateFormatter = DateFormatter()
+         dateFormatter.dateStyle = .short
+         dateFormatter.timeStyle = .none
+         
+         var latestMed: String
+         latestMed = dateFormatter.string(from: (meds.value?.max())!)
+         
+         print(latestMed)
+         }*/
+        
+        guard let pet1 = Pet(petName: "Winnie", dob: today, petSex: "Female", photo: photo1, vaccineDates: vaccines) else {
+            fatalError("Unable to instantiate pet1")
+        }
+        
+        //Sample of creating a new type of vaccine
+        let newMed = "MyNewMed"
+        let dayNew = formatter.date(from: "1961/01/11")
+        vaccines[newMed] = [dayNew!]
+        
+        guard let pet2 = Pet(petName: "Suzi", dob: nil, petSex: "Female", photo: photo2, vaccineDates: vaccines) else {
+            fatalError("Unable to instantiate dog2")
+        }
+        
+        guard let pet3 = Pet(petName: "Albus", dob: nil, petSex: nil, photo: photo3, vaccineDates: vaccines) else {
+            fatalError("Unable to instantiate dog3")
+        }
+        
+        pets += [pet1, pet2, pet3]
+        
+    }
+    
+    private func savePets() {
+        print("savePets() WAS CALLED")
+        let isSuccessfulSave = NSKeyedArchiver.archiveRootObject(pets, toFile: Pet.ArchiveURL.path)
+        if isSuccessfulSave {
+            os_log("Dogs successfully saved.", log: OSLog.default, type: .debug)
+        } else {
+            os_log("Failed to save dogs...", log: OSLog.default, type: .error)
+        }
+    }
+    
+ 
 }

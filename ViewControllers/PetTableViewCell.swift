@@ -12,6 +12,9 @@ class PetTableViewCell: UITableViewCell {
 
     //MARK: Properties
     @IBOutlet weak var petNameLabel: UILabel!
+    @IBOutlet weak var petImage: UIImageView!
+    @IBOutlet weak var petDOB: UILabel!
+    @IBOutlet weak var petSex: UILabel!
     
     
     override func awakeFromNib() {
