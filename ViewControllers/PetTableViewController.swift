@@ -15,13 +15,12 @@ class PetTableViewController: UITableViewController {
     //MARK: Properties and create an array of the new objects
     var pets = [Pet]()
     var pet: Pet?
+    var onTheCloud = false
     
     //var tb: UITableView?
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        print("Using loadPets from viewDidLoad")
         
         //Confirm connectivity with iCloud
         testForICloud()
@@ -37,16 +36,22 @@ class PetTableViewController: UITableViewController {
         //print(NSHomeDirectory())
         
         // Load any saved dogs, otherwise load sample data.
-        if let savedPets = loadPets() {
-            pets += savedPets
-        }
+        //if onTheCloud == true {
+            if let savedPets = loadPets() {
+                print("DEBUG: Getting pets from iCloud")
+                pets += savedPets
+            }
+        //}
         else if let savedPets = loadPetsLocal() {
-            pets += savedPets
-        }
-        else {
-            // Load the sample data.
-            loadSamples()
-        }
+                print("DEBUG: Getting pets from Local Cache")
+                pets += savedPets
+            }
+            else {
+                // Load the sample data.
+                 print("DEBUG: Getting pets from Samples")
+                loadSamples()
+            }
+//}
         
         NotificationCenter.default.addObserver(self, selector: #selector(PetTableViewController.loadPets), name: NSNotification.Name(rawValue: "load"), object: nil)
         
@@ -87,8 +92,21 @@ class PetTableViewController: UITableViewController {
 
         let pet = pets[indexPath.row]
        
-        // Configure the cell...
-        cell.petNameLabel.text = pet.petName
+        // Date Formatter
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateStyle = .short
+        dateFormatter.timeStyle = .none
+        
+        cell.petName.text = pet.petName
+        cell.petImage.image = pet.photo
+        cell.petName.text = pet.petName
+        if pet.dob == nil {
+            cell.petDOB.text = ""
+        } else {
+            cell.petDOB.text = dateFormatter.string(from: pet.dob!)
+        }
+        cell.petSex.text = pet.petSex
+        cell.petImage.image = pet.photo
         
         return cell
     }
@@ -175,6 +193,8 @@ class PetTableViewController: UITableViewController {
             switch accountStatus {
             case .available:
                 print("iCloud Available")
+                self.onTheCloud = true
+                print("onTheCloud is \(self.onTheCloud)")
                 //simple alert dialog
                 //let alert=UIAlertController(title: "Signed in to iCloud", message: "This application requires iCloud. You are successfully logged in. Thanks!", preferredStyle: UIAlertControllerStyle.alert);
                 //no event handler (just close dialog box)

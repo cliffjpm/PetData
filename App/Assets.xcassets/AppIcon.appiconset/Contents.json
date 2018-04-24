@@ -1,6 +1,12 @@
 {
   "images" : [
     {
+      "size" : "20x20",
+      "idiom" : "iphone",
+      "filename" : "FullSizeRender 2.jpg",
+      "scale" : "2x"
+    },
+    {
       "idiom" : "iphone",
       "size" : "20x20",
       "scale" : "2x"

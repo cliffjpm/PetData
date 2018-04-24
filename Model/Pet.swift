@@ -51,20 +51,18 @@ class Pet: NSObject, NSCoding {
             else {
                 return nil
         }
-        guard let dob = remoteRecord.object(forKey: RemotePet.dob) as? Date
-            else {
-                return nil
-        }
-        
+        dob = remoteRecord.object(forKey: RemotePet.dob) as? Date
+        petSex = remoteRecord.object(forKey: RemotePet.petSex) as? String
+        photo = remoteRecord.object(forKey: RemotePet.photo) as? UIImage
+    
       
         guard !petName.isEmpty else {
             return nil
         }
 
         self.petName = petName
-        self.dob = dob
         self.remoteRecord = remoteRecord
-        print("date of birth is \(dob)")
+        
 
         //TODO: Initialize other properties
         /*self.dob = remoteRecord.object(forKey: RemotePet.dob) as? Date
