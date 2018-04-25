@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9146BE5F2090CF9B00971460 /* UIImageCKAsset.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9146BE5E2090CF9B00971460 /* UIImageCKAsset.swift */; };
 		916EA052201B68E700180E0F /* Pet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 916EA051201B68E700180E0F /* Pet.swift */; };
 		91FD7074201B787200E77CE5 /* PetTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FD7073201B787200E77CE5 /* PetTableViewCell.swift */; };
 		91FD7078201B7B1D00E77CE5 /* PetTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FD7077201B7B1D00E77CE5 /* PetTableViewController.swift */; };
@@ -41,6 +42,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		9146BE5E2090CF9B00971460 /* UIImageCKAsset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIImageCKAsset.swift; sourceTree = "<group>"; };
 		916EA051201B68E700180E0F /* Pet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pet.swift; sourceTree = "<group>"; };
 		91FD7073201B787200E77CE5 /* PetTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetTableViewCell.swift; sourceTree = "<group>"; };
 		91FD7077201B7B1D00E77CE5 /* PetTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetTableViewController.swift; sourceTree = "<group>"; };
@@ -141,6 +143,7 @@
 				CF89957A201774FE00E1C9F9 /* Assets.xcassets */,
 				CF89957F201774FE00E1C9F9 /* Info.plist */,
 				CF899577201774FE00E1C9F9 /* PetData.xcdatamodeld */,
+				9146BE5E2090CF9B00971460 /* UIImageCKAsset.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -326,6 +329,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9146BE5F2090CF9B00971460 /* UIImageCKAsset.swift in Sources */,
 				CF8995A62017796000E1C9F9 /* Constants.swift in Sources */,
 				CF899573201774FE00E1C9F9 /* PetDetailViewController.swift in Sources */,
 				CF899579201774FE00E1C9F9 /* PetData.xcdatamodeld in Sources */,

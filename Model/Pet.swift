@@ -53,9 +53,18 @@ class Pet: NSObject, NSCoding {
         }
         dob = remoteRecord.object(forKey: RemotePet.dob) as? Date
         petSex = remoteRecord.object(forKey: RemotePet.petSex) as? String
-        photo = remoteRecord.object(forKey: RemotePet.photo) as? UIImage
+        //photo = remoteRecord.object(forKey: RemotePet.photo) as? UIImage
     
-      
+
+        
+        // Get image from an asset
+        if let asset = remoteRecord.object(forKey: RemotePet.photo)  as? CKAsset, let image = asset.image  {
+            self.photo = image
+        }
+        else{
+            self.photo = UIImage(named: "defaultPhoto")
+        }
+        
         guard !petName.isEmpty else {
             return nil
         }
@@ -63,23 +72,8 @@ class Pet: NSObject, NSCoding {
         self.petName = petName
         self.remoteRecord = remoteRecord
         
-
-        //TODO: Initialize other properties
-        /*self.dob = remoteRecord.object(forKey: RemotePet.dob) as? Date
-        self.petSex = remoteRecord.object(forKey: RemotePet.petSex) as? String
-        self.photo = remoteRecord.object(forKey: RemotePet.photo) as? UIImage
-        
-        
         //TODO: Need to sort out Vaccine Dates
-        self.vaccineDates = remoteRecord.object(forKey: RemotePet.vaccineDates) as? Dictionary<String, Array<Date>>
-        
- 
-        
-        //TO DO: I need to investigate this one but I took out "|| (petSex == nil)" as the warning stated
-        //"Comparing non-option value of type "String" to nil always returns false"
-        guard (petSex == "Male") || (petSex == "Female") else{
-            return nil
-        }*/
+        //self.vaccineDates = remoteRecord.object(forKey: RemotePet.vaccineDates) as? Dictionary<String, Array<Date>>
         
     }
     
