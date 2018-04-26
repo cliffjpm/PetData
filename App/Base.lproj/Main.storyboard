@@ -6,6 +6,8 @@
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14088"/>
+        <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -95,30 +97,88 @@
             </objects>
             <point key="canvasLocation" x="-1095.2" y="214.54272863568218"/>
         </scene>
-        <!--New Pet-->
+        <!--PetDetails-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController id="BYZ-38-t0r" customClass="PetDetailViewController" customModule="PetData" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="BYZ-38-t0r" userLabel="PetDetails" customClass="PetDetailViewController" customModule="PetData" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <textField opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Enter Name" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="vNy-RJ-H3p">
-                                <rect key="frame" x="16" y="111" width="343" height="30"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <nil key="textColor"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <textInputTraits key="textInputTraits" enablesReturnKeyAutomatically="YES" textContentType="name"/>
-                            </textField>
+                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="O0d-0R-2vY">
+                                <rect key="frame" x="0.0" y="68" width="375" height="555"/>
+                                <subviews>
+                                    <stackView opaque="NO" contentMode="scaleToFill" alignment="top" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="qGx-6P-v1V">
+                                        <rect key="frame" x="0.0" y="0.0" width="375" height="555"/>
+                                        <subviews>
+                                            <imageView contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" placeholderIntrinsicWidth="320" placeholderIntrinsicHeight="320" image="defaultPhoto" translatesAutoresizingMaskIntoConstraints="NO" id="zNV-bN-5ZP">
+                                                <rect key="frame" x="0.0" y="0.0" width="120" height="120"/>
+                                                <gestureRecognizers/>
+                                                <constraints>
+                                                    <constraint firstAttribute="width" secondItem="zNV-bN-5ZP" secondAttribute="height" multiplier="1:1" id="1cU-f3-Zji"/>
+                                                    <constraint firstAttribute="width" constant="120" id="HSl-5b-Y8x"/>
+                                                    <constraint firstAttribute="height" constant="120" id="WbN-pm-Y3e"/>
+                                                </constraints>
+                                                <connections>
+                                                    <outletCollection property="gestureRecognizers" destination="RRn-TP-QmM" appends="YES" id="nCd-od-UE6"/>
+                                                </connections>
+                                            </imageView>
+                                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="center" spacing="4" translatesAutoresizingMaskIntoConstraints="NO" id="gJV-EB-ddq">
+                                                <rect key="frame" x="128" y="0.0" width="247" height="113"/>
+                                                <subviews>
+                                                    <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Enter Pet's Name" textAlignment="center" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="2j5-HZ-r2X">
+                                                        <rect key="frame" x="43" y="0.0" width="161.5" height="30"/>
+                                                        <constraints>
+                                                            <constraint firstAttribute="height" constant="30" id="zze-qF-glz"/>
+                                                        </constraints>
+                                                        <nil key="textColor"/>
+                                                        <fontDescription key="fontDescription" type="boldSystem" pointSize="17"/>
+                                                        <textInputTraits key="textInputTraits" returnKeyType="done" enablesReturnKeyAutomatically="YES"/>
+                                                    </textField>
+                                                    <pickerView contentMode="center" translatesAutoresizingMaskIntoConstraints="NO" id="JQj-Dq-g5z">
+                                                        <rect key="frame" x="73.5" y="34" width="100" height="45"/>
+                                                        <constraints>
+                                                            <constraint firstAttribute="height" constant="45" id="mOc-nO-mvN"/>
+                                                            <constraint firstAttribute="width" constant="100" id="vEm-ki-bxT" userLabel="width = 150"/>
+                                                        </constraints>
+                                                    </pickerView>
+                                                    <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Select Birthday" textAlignment="center" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="zsP-Zg-RtQ">
+                                                        <rect key="frame" x="66.5" y="83" width="114" height="30"/>
+                                                        <constraints>
+                                                            <constraint firstAttribute="height" constant="30" id="Ug3-eP-2CP"/>
+                                                        </constraints>
+                                                        <nil key="textColor"/>
+                                                        <fontDescription key="fontDescription" type="system" pointSize="13"/>
+                                                        <textInputTraits key="textInputTraits"/>
+                                                        <connections>
+                                                            <action selector="dateFieldTouched:" destination="BYZ-38-t0r" eventType="editingDidBegin" id="CZ9-cr-xFb"/>
+                                                        </connections>
+                                                    </textField>
+                                                </subviews>
+                                            </stackView>
+                                        </subviews>
+                                    </stackView>
+                                </subviews>
+                            </stackView>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstAttribute="bottomMargin" secondItem="O0d-0R-2vY" secondAttribute="bottom" id="0oi-YQ-m9C"/>
+                            <constraint firstItem="O0d-0R-2vY" firstAttribute="trailing" secondItem="6Tk-OE-BBY" secondAttribute="trailing" id="Ay2-RB-e23" userLabel="Stack View.trailing = Safe Area.Trailing"/>
+                            <constraint firstItem="O0d-0R-2vY" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="4" id="NWF-1K-PfQ"/>
+                            <constraint firstItem="O0d-0R-2vY" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="pnV-28-flI" userLabel="Stack View.leading = Safe Area.leading"/>
+                        </constraints>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
                     <toolbarItems>
                         <barButtonItem systemItem="add" id="VZb-xw-giM"/>
                     </toolbarItems>
-                    <navigationItem key="navigationItem" title="New Pet" id="YdD-f8-oAN">
-                        <barButtonItem key="leftBarButtonItem" systemItem="cancel" id="NQK-fb-UKc"/>
+                    <navigationItem key="navigationItem" title="Pet Details" id="YdD-f8-oAN">
+                        <barButtonItem key="leftBarButtonItem" systemItem="cancel" id="NQK-fb-UKc">
+                            <connections>
+                                <action selector="cancel:" destination="BYZ-38-t0r" id="I9a-41-uU5"/>
+                            </connections>
+                        </barButtonItem>
                         <barButtonItem key="rightBarButtonItem" systemItem="save" id="sGe-Ds-JmC">
                             <connections>
                                 <segue destination="X2W-4c-uyl" kind="unwind" unwindAction="unwindToPetListWithSender:" id="3Iu-lq-9Vr"/>
@@ -127,11 +187,19 @@
                     </navigationItem>
                     <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
                     <connections>
-                        <outlet property="petName" destination="vNy-RJ-H3p" id="xfP-Je-Rtj"/>
+                        <outlet property="birthDateTxt" destination="zsP-Zg-RtQ" id="zqi-Rc-JgV"/>
+                        <outlet property="petNameField" destination="2j5-HZ-r2X" id="0fy-CQ-Qij"/>
+                        <outlet property="photoImageView" destination="zNV-bN-5ZP" id="bAA-kS-iPE"/>
                         <outlet property="saveButton" destination="sGe-Ds-JmC" id="FLN-1e-1rF"/>
+                        <outlet property="sexPicker" destination="JQj-Dq-g5z" id="Skc-Rx-7oK"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+                <tapGestureRecognizer id="RRn-TP-QmM">
+                    <connections>
+                        <action selector="selectImageFromPhotoLibrary:" destination="BYZ-38-t0r" id="CRF-Jb-Vgv"/>
+                    </connections>
+                </tapGestureRecognizer>
                 <exit id="X2W-4c-uyl" userLabel="Exit" sceneMemberID="exit"/>
             </objects>
             <point key="canvasLocation" x="599" y="203"/>
