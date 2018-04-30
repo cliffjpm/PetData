@@ -77,6 +77,7 @@
                                     <outlet property="petImage" destination="Pcl-Gj-VSa" id="xQI-7c-ubq"/>
                                     <outlet property="petName" destination="WeW-Km-dV2" id="W0J-8d-Maa"/>
                                     <outlet property="petSex" destination="nlT-Mq-dSW" id="xCl-DU-aQk"/>
+                                    <segue destination="BYZ-38-t0r" kind="show" identifier="ShowDetail" id="EUf-Rq-SQb"/>
                                 </connections>
                             </tableViewCell>
                         </prototypes>
@@ -244,4 +245,7 @@
     <resources>
         <image name="defaultPhoto" width="540" height="540"/>
     </resources>
+    <inferredMetricsTieBreakers>
+        <segue reference="EUf-Rq-SQb"/>
+    </inferredMetricsTieBreakers>
 </document>

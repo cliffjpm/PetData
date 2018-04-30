@@ -133,17 +133,41 @@ class PetTableViewController: UITableViewController {
     }
     */
 
-    /*
+    
     // MARK: - Navigation
 
     // In a storyboard-based application, you will often want to do a little preparation before navigation
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
+        
+        super.prepare(for: segue, sender: sender)
+        
+        switch(segue.identifier ?? "") {
+            
+        case "AddPet":
+            os_log("Adding a new pet.", log: OSLog.default, type: .debug)
+            
+        case "ShowDetail":
+            guard let petDetailViewController = segue.destination as? PetDetailViewController else {
+                fatalError("Unexpected destination: \(segue.destination)")
+            }
+            
+            guard let selectedPetCell = sender as? PetTableViewCell else {
+                fatalError("Unexpected sender: \(String(describing: sender))")
+            }
+            
+            guard let indexPath = tableView.indexPath(for: selectedPetCell) else {
+                fatalError("The selected cell is not being displayed by the table")
+            }
+            
+            let selectedPet = pets[indexPath.row]
+            petDetailViewController.pet = selectedPet
+            
+        default:
+            fatalError("Unexpected Segue Identifier; \(String(describing: segue.identifier))")
+        }
     }
-    */
     
-    //MARK: Actions
+    
     @IBAction func unwindToPetList(sender: UIStoryboardSegue) {
         if let sourceViewController = sender.source as? PetDetailViewController, let pet = sourceViewController.pet {
             

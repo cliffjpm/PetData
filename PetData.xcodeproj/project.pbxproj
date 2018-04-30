@@ -96,8 +96,8 @@
 			isa = PBXGroup;
 			children = (
 				CF899572201774FE00E1C9F9 /* PetDetailViewController.swift */,
-				91FD7073201B787200E77CE5 /* PetTableViewCell.swift */,
 				91FD7077201B7B1D00E77CE5 /* PetTableViewController.swift */,
+				91FD7073201B787200E77CE5 /* PetTableViewCell.swift */,
 				CF89957C201774FE00E1C9F9 /* LaunchScreen.storyboard */,
 			);
 			path = ViewControllers;
