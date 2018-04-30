@@ -192,6 +192,8 @@ class Pet: NSObject, NSCoding {
         // store this metadata on your local object
         self.encodedSystemFields = data as Data
         
+        print("Processing local save ...")
+        
         let isSuccessfulSave = NSKeyedArchiver.archiveRootObject(self, toFile: Pet.ArchiveURL.path)
         if isSuccessfulSave {
             os_log("Pets successfully saved.", log: OSLog.default, type: .debug)
@@ -200,6 +202,9 @@ class Pet: NSObject, NSCoding {
         }
         
     }
+    
+    
+    
     
     //MARK: Archiving Paths
     

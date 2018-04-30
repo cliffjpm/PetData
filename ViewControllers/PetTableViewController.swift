@@ -35,25 +35,9 @@ class PetTableViewController: UITableViewController {
         //print("NS Home is: ")
         //print(NSHomeDirectory())
         
-        // Load any saved dogs, otherwise load sample data.
-        //if onTheCloud == true {
-            if let savedPets = loadPets() {
-                print("DEBUG: Getting pets from iCloud")
-                pets += savedPets
-            }
-        //}
-        else if let savedPets = loadPetsLocal() {
-                print("DEBUG: Getting pets from Local Cache")
-                pets += savedPets
-            }
-            else {
-                // Load the sample data.
-                 print("DEBUG: Getting pets from Samples")
-                loadSamples()
-            }
-//}
-        
         NotificationCenter.default.addObserver(self, selector: #selector(PetTableViewController.loadPets), name: NSNotification.Name(rawValue: "load"), object: nil)
+        
+        
         
         /*tb = self.tableView
         tb?.dataSource = self
@@ -66,6 +50,7 @@ class PetTableViewController: UITableViewController {
         // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
         // self.navigationItem.rightBarButtonItem = self.editButtonItem
     }
+    
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
@@ -172,17 +157,15 @@ class PetTableViewController: UITableViewController {
             self.pet = pet
             pet.save()
             
-            perform(#selector(loadPets), with: nil, afterDelay: 4.0)
+            perform(#selector(createDataSet), with: nil, afterDelay: 4.0)
             
-            /*self.pets.append(pet)
+            /* Add a new pet to the display.
+            let newIndexPath = IndexPath(row: pets.count, section: 0)
+                
+            pets.append(pet)
+            tableView.insertRows(at: [newIndexPath], with: .automatic)
+ */
             
-            DispatchQueue.main.async {
-                self.tableView.reloadData()
-            }*/
-            
-            /*print("Using loadPets from unwindToPetList")
-            sleep(1)
-            loadPets()*/
         }
     }
     
@@ -194,7 +177,7 @@ class PetTableViewController: UITableViewController {
             case .available:
                 print("iCloud Available")
                 self.onTheCloud = true
-                print("onTheCloud is \(self.onTheCloud)")
+                self.createDataSet()
                 //simple alert dialog
                 //let alert=UIAlertController(title: "Signed in to iCloud", message: "This application requires iCloud. You are successfully logged in. Thanks!", preferredStyle: UIAlertControllerStyle.alert);
                 //no event handler (just close dialog box)
@@ -209,10 +192,13 @@ class PetTableViewController: UITableViewController {
                 alert.addAction(UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel, handler: nil));
                 //show it
                 self.present(alert, animated: true, completion: nil)
+                self.createDataSet()
             case .restricted:
                 print("iCloud restricted")
+                self.createDataSet()
             case .couldNotDetermine:
                 print("Unable to determine iCloud status")
+                self.createDataSet()
             }
         }
     }
@@ -356,13 +342,25 @@ class PetTableViewController: UITableViewController {
         
     }
     
-    private func savePets() {
-        print("savePets() WAS CALLED")
-        let isSuccessfulSave = NSKeyedArchiver.archiveRootObject(pets, toFile: Pet.ArchiveURL.path)
-        if isSuccessfulSave {
-            os_log("Dogs successfully saved.", log: OSLog.default, type: .debug)
-        } else {
-            os_log("Failed to save dogs...", log: OSLog.default, type: .error)
+    @objc private func createDataSet(){
+        // Load any saved pets, otherwise load sample data.
+        
+        print("onTheCloud is \(self.onTheCloud)")
+        
+        if self.onTheCloud == true {
+            if let savedPets = loadPets() {
+                print("DEBUG: Getting pets from iCloud")
+                pets += savedPets
+            }
+        }
+        else if let savedPets = loadPetsLocal() {
+            print("DEBUG: Getting pets from Local Cache")
+            pets += savedPets
+        }
+        else {
+            // Load the sample data.
+            print("DEBUG: Getting pets from Samples")
+            loadSamples()
         }
     }
     
