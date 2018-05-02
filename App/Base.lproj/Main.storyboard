@@ -89,7 +89,7 @@
                     <navigationItem key="navigationItem" title="Pet List" id="6i3-VX-OEI">
                         <barButtonItem key="rightBarButtonItem" systemItem="add" id="PU4-kg-DEe">
                             <connections>
-                                <segue destination="jGL-eh-gk9" kind="presentation" identifier="addPet" id="75Z-PS-nXl"/>
+                                <segue destination="jGL-eh-gk9" kind="presentation" identifier="AddPet" id="75Z-PS-nXl"/>
                             </connections>
                         </barButtonItem>
                     </navigationItem>
@@ -226,7 +226,6 @@
         <!--Navigation Controller-->
         <scene sceneID="Eu0-OD-s8D">
             <objects>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="7vK-T8-dfd" userLabel="First Responder" sceneMemberID="firstResponder"/>
                 <navigationController automaticallyAdjustsScrollViewInsets="NO" id="jGL-eh-gk9" sceneMemberID="viewController">
                     <toolbarItems/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="ahY-Ze-HG4">
@@ -238,6 +237,7 @@
                         <segue destination="BYZ-38-t0r" kind="relationship" relationship="rootViewController" id="YnL-0i-bhH"/>
                     </connections>
                 </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="7vK-T8-dfd" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="-242" y="637"/>
         </scene>

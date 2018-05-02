@@ -19,7 +19,10 @@ class Pet: NSObject, NSCoding {
     var petSex: String?
     var photo: UIImage?
     var remoteRecord: CKRecord? = nil
-    var encodedSystemFields: Data?
+    var recordName: String?
+    var recordChangeTag: String?
+    
+    //var changeRecords: [CKRecord]?
     //var newRecord: CKRecord? = nil
     //var userRecordName = ""
     
@@ -37,7 +40,8 @@ class Pet: NSObject, NSCoding {
         static let petSex = "petSex"
         static let photo = "photo"
         static let vaccineDates = "vaccineDates"
-        static let data = "data"
+        static let recordName = "recordID"
+        static let recordChangeTag = "recordChangeTag"
     }
     
     //MARK: Initialization
@@ -53,9 +57,6 @@ class Pet: NSObject, NSCoding {
         }
         dob = remoteRecord.object(forKey: RemotePet.dob) as? Date
         petSex = remoteRecord.object(forKey: RemotePet.petSex) as? String
-        //photo = remoteRecord.object(forKey: RemotePet.photo) as? UIImage
-    
-
         
         // Get image from an asset
         if let asset = remoteRecord.object(forKey: RemotePet.photo)  as? CKAsset, let image = asset.image  {
@@ -71,6 +72,11 @@ class Pet: NSObject, NSCoding {
 
         self.petName = petName
         self.remoteRecord = remoteRecord
+        
+        //print("DEBUG: ID is \(remoteRecord.recordID.recordName)  and record Change Tag is \(remoteRecord.recordChangeTag)")
+        self.recordName = remoteRecord.recordID.recordName
+        self.recordChangeTag = remoteRecord.recordChangeTag
+        
         
         //TODO: Need to sort out Vaccine Dates
         //self.vaccineDates = remoteRecord.object(forKey: RemotePet.vaccineDates) as? Dictionary<String, Array<Date>>
@@ -130,7 +136,16 @@ class Pet: NSObject, NSCoding {
     }
     
     //MARK: Save function for iCloud
-    func save() {
+    //func saveToCloud() -> Pet {
+    func saveToCloud(
+        completion: @escaping (
+        _ results: Pet?,
+        _ changeTag: String?,
+        _ error: NSError?) -> ())
+    {
+        
+        print("Saving to CloudKit...")
+        
         if remoteRecord == nil {
             remoteRecord = CKRecord(recordType: RemoteRecords.pet, zoneID: ArendK9DB.share.zoneID)
         }
@@ -156,33 +171,45 @@ class Pet: NSObject, NSCoding {
             remoteRecord?[RemotePet.photo] = File as CKAsset?
         }
         
-       
         
         /*ArendK9DB.share.privateDB.save(remoteRecord!) {
          record, error in
          if let errorDescription = error?.localizedDescription {
          print("Record error: \(errorDescription)")
          } else {
-         print("Pet Record Saved")
-         }
+            print("Record is \(record)")
+            self.remoteRecord = record
+            self.remoteRecord?[RemotePet.recordName] = record?.recordID.recordName as NSString?
+            self.recordChangeTag = record?.recordChangeTag as String?
+            print("Change tag is \(String(describing: self.remoteRecord?.recordChangeTag))")
+            //self.changeRecords = [record] as! [CKRecord]
+            }
          }*/
         
         
         let saveOperation = CKModifyRecordsOperation(recordsToSave: [remoteRecord!], recordIDsToDelete: nil)
-        
+    
         saveOperation.perRecordCompletionBlock = {
             record, error in
             if error != nil {
                 print(error!.localizedDescription)
             } else {
-                print("Record is \(record)")
+                print("Saving Record to Cloud: \(record)")
                 self.remoteRecord = record
+                self.remoteRecord?[RemotePet.recordName] = record.recordID.recordName as NSString?
+                self.recordChangeTag = record.recordChangeTag as String?
+                print("Change tag:  \(String(describing: self.remoteRecord?.recordChangeTag))")
+                
             }
+            completion(self, self.recordChangeTag, nil)
         }
+        
         
         ArendK9DB.share.privateDB.add(saveOperation)
         
-        // obtain the metadata from the CKRecord
+        
+        /*This code was designed for using NS data. I did not take this route
+         // obtain the metadata from the CKRecord
         let data = NSMutableData()
         let coder = NSKeyedArchiver.init(forWritingWith: data)
         coder.requiresSecureCoding = true
@@ -190,39 +217,58 @@ class Pet: NSObject, NSCoding {
         coder.finishEncoding()
         
         // store this metadata on your local object
-        self.encodedSystemFields = data as Data
+        self.encodedSystemFields = data as Data*/
         
+        /*ArendK9DB.share.privateDB.fetch(withRecordID: (self.remoteRecord?.recordID)!, completionHandler: { (record: CKRecord?, e: Error?) in
+            if e != nil {
+                print("ERROR: \(String(describing: e))")
+                return
+            }
+            else {
+                //Change a value
+                self.recordChangeTag = record?.recordChangeTag
+                }
+            }
+        )*/
+        
+    }
+    
+    @objc func saveToLocal(petsToSave: [Pet]) {
         print("Processing local save ...")
         
-        let isSuccessfulSave = NSKeyedArchiver.archiveRootObject(self, toFile: Pet.ArchiveURL.path)
+        let isSuccessfulSave = NSKeyedArchiver.archiveRootObject(petsToSave, toFile: Pet.ArchiveURL.path)
+        
+        
         if isSuccessfulSave {
             os_log("Pets successfully saved.", log: OSLog.default, type: .debug)
         } else {
             os_log("Failed to save pets...", log: OSLog.default, type: .error)
         }
-        
+    
     }
-    
-    
     
     
     //MARK: Archiving Paths
     
     static let DocumentsDirectory = FileManager().urls(for: .documentDirectory, in: .userDomainMask).first!
-    static let ArchiveURL = DocumentsDirectory.appendingPathComponent("dogs")
+    static let ArchiveURL = DocumentsDirectory.appendingPathComponent("pets")
     
     //MARK: NSCoding
     func encode(with aCoder: NSCoder) {
+        //print("DEBUG: called the encoder")
         aCoder.encode(petName, forKey: PropertyKey.petName)
         aCoder.encode(dob, forKey: PropertyKey.dob)
         aCoder.encode(petSex, forKey: PropertyKey.petSex)
         aCoder.encode(photo, forKey: PropertyKey.photo)
         aCoder.encode(vaccineDates, forKey: PropertyKey.vaccineDates)
+        aCoder.encode(recordName, forKey: PropertyKey.recordName)
+        aCoder.encode(recordChangeTag, forKey: PropertyKey.recordChangeTag)
+        print("ENCODING: \(petName) with change tag \(recordChangeTag)")
         //os_log("Encoding the Vaccine Dictionary was successful.", log: OSLog.default, type: .debug)
     }
     
     required convenience init?(coder aDecoder: NSCoder) {
-        
+        print("DEBUG: called the decoder")
         // The name is required. If we cannot decode a name string, the initializer should fail.
         guard let petName = aDecoder.decodeObject(forKey: PropertyKey.petName) as? String else {
             //os_log("Unable to decode the name for a Dog object.", log: OSLog.default, type: .debug)
@@ -234,7 +280,9 @@ class Pet: NSObject, NSCoding {
         let dob = aDecoder.decodeObject(forKey: PropertyKey.dob) as? Date
         let petSex = aDecoder.decodeObject(forKey: PropertyKey.petSex) as? String
         let vaccineDates = aDecoder.decodeObject(forKey: PropertyKey.vaccineDates) as? Dictionary<String, Array<Date>>
-        //os_log("Decoding the Vaccine Dictionary was successful.>", log: OSLog.default, type: .debug)
+        let recordName = aDecoder.decodeObject(forKey: PropertyKey.recordName) as? String
+        let recordChangeTag = aDecoder.decodeObject(forKey: PropertyKey.recordChangeTag) as? String
+         //os_log("Decoding the Vaccine Dictionary was successful.>", log: OSLog.default, type: .debug)
         //print(vaccineDates)
         
         

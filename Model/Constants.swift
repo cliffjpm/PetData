@@ -18,4 +18,6 @@ enum RemotePet {
     static let petSex = "PetSex"
     static let photo = "Photo"
     static let vaccineDates = "VaccineDates"
+    static let recordName = "recordName"
+    static let recordChangeTag = "recordChangeTag"
 }

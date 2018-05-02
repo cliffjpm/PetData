@@ -16,6 +16,7 @@ class PetTableViewController: UITableViewController {
     var pets = [Pet]()
     var pet: Pet?
     var onTheCloud = false
+    var CKPet: Pet?
     
     //var tb: UITableView?
     
@@ -36,7 +37,6 @@ class PetTableViewController: UITableViewController {
         //print(NSHomeDirectory())
         
         NotificationCenter.default.addObserver(self, selector: #selector(PetTableViewController.loadPets), name: NSNotification.Name(rawValue: "load"), object: nil)
-        
         
         
         /*tb = self.tableView
@@ -171,27 +171,51 @@ class PetTableViewController: UITableViewController {
     @IBAction func unwindToPetList(sender: UIStoryboardSegue) {
         if let sourceViewController = sender.source as? PetDetailViewController, let pet = sourceViewController.pet {
             
-            // Add a new pet.
-            //let newIndexPath = IndexPath(row: pets.count, section: 0)
+           
             
-            //pets.append(pet)
-            //tableView.insertRows(at: [newIndexPath], with: .automatic)
+            //Try to save to the CloudKit (creates recordName and recordChangeTag)
+            ArendK9DB.share.container.accountStatus { (accountStatus, error) in
+                switch accountStatus {
+                case .available:
+                    print("Saving pet to CloudKit")
+                    self.onTheCloud = true
+                    pet.saveToCloud(
+                        )
+                        { (results , changeTag, error) -> () in
+                            print("Starting completion block")
+                            self.pets.append(results!)
+                            print("DEBUG: inside block is \(results) with changeTag \(changeTag) and an error of \(error)")
+                            print("Pets: \(self.pets)")
+                            pet.saveToLocal(petsToSave: self.pets)
+                            print("Exiting completion block")
+                        }
+                    //pet.saveToCloud(completion: (Error?.none as! (Error?) -> Void))
+                    //print("DEBUG: inside CKPet is \(CKPet?.petName) and \(CKPet?.remoteRecord)")
+                    
+                case .noAccount:
+                    print("Sving pet to local data store")
+                    self.pets.append(pet)
+                    pet.saveToLocal(petsToSave: self.pets)
+                case .restricted:
+                    print("Sving pet to local data store")
+                    self.pets.append(pet)
+                    pet.saveToLocal(petsToSave: self.pets)
+                case .couldNotDetermine:
+                    print("Sving pet to local data store")
+                    self.pets.append(pet)
+                    pet.saveToLocal(petsToSave: self.pets)
+                    
+                }
+            }
             
-            //TODO: This only saved to iCloud for now. Need to add local copy and any conflict resolution
-            self.pet = pet
-            pet.save()
+           
             
             perform(#selector(createDataSet), with: nil, afterDelay: 4.0)
-            
-            /* Add a new pet to the display.
-            let newIndexPath = IndexPath(row: pets.count, section: 0)
-                
-            pets.append(pet)
-            tableView.insertRows(at: [newIndexPath], with: .automatic)
- */
+
             
         }
     }
+    
     
     //MARK: Custom Functions
     func testForICloud() {
@@ -282,7 +306,7 @@ class PetTableViewController: UITableViewController {
     
     //MARK: Try to load records from the local archive if no iCloud connectivity exists
     private func loadPetsLocal() -> [Pet]?  {
-        return NSKeyedUnarchiver.unarchiveObject(withFile: Pet.ArchiveURL.path) as? [Pet]
+            return NSKeyedUnarchiver.unarchiveObject(withFile: Pet.ArchiveURL.path) as? [Pet]
     }
     
     
@@ -364,6 +388,10 @@ class PetTableViewController: UITableViewController {
         
         pets += [pet1, pet2, pet3]
         
+        DispatchQueue.main.async {
+            self.tableView.reloadData()
+        }
+        
     }
     
     @objc private func createDataSet(){
@@ -371,20 +399,29 @@ class PetTableViewController: UITableViewController {
         
         print("onTheCloud is \(self.onTheCloud)")
         
-        if self.onTheCloud == true {
+        //If connected to iCloud, load the data into the pets array
+         if self.onTheCloud == true {
             if let savedPets = loadPets() {
                 print("DEBUG: Getting pets from iCloud")
                 pets += savedPets
             }
         }
-        else if let savedPets = loadPetsLocal() {
-            print("DEBUG: Getting pets from Local Cache")
-            pets += savedPets
-        }
+        //If NOT connected to iCloud...
         else {
-            // Load the sample data.
-            print("DEBUG: Getting pets from Samples")
-            loadSamples()
+            if let savedPets = loadPetsLocal() {
+                print("DEBUG: Getting pets from Local Cache")
+                pets += savedPets
+                DispatchQueue.main.async {
+                    self.tableView.reloadData()
+                }
+            }
+            //There is no local data
+            else {
+                // Load the sample data.
+                print("DEBUG: Getting pets from Samples")
+                loadSamples()
+                //TODO: Call save to local and try save to iCloud
+            }
         }
     }
     
