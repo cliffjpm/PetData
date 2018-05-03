@@ -238,7 +238,6 @@ class Pet: NSObject, NSCoding {
         
         let isSuccessfulSave = NSKeyedArchiver.archiveRootObject(petsToSave, toFile: Pet.ArchiveURL.path)
         
-        
         if isSuccessfulSave {
             os_log("Pets successfully saved.", log: OSLog.default, type: .debug)
         } else {
