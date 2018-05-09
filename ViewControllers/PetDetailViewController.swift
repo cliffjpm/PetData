@@ -28,6 +28,7 @@ class PetDetailViewController: UIViewController, UIPickerViewDataSource, UIPicke
     let sex = ["Sex", "Male", "Female"]
     var sexSelected: String?
     
+    
     //MARK: UI Actions
     @IBAction func dateFieldTouched(_ sender: Any) {
      saveButton.isEnabled = false
@@ -58,13 +59,28 @@ class PetDetailViewController: UIViewController, UIPickerViewDataSource, UIPicke
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
         
+        //picker.allowsEditing = true
+        
+        print("DEBUG: the picker allows editing = \(picker.allowsEditing)")
+        
+        /* OLD CODE BEFORE CROPPING ADDED
         // The info dictionary may contain multiple representations of the image. You want to use the original.
         guard let selectedImage = info[UIImagePickerControllerOriginalImage] as? UIImage else {
             fatalError("Expected a dictionary containing an image, but was provided the following: \(info)")
         }
         
         // Set photoImageView to display the selected image.
-        photoImageView.image = selectedImage
+        photoImageView.image = selectedImage*/
+ 
+        if let img = info[UIImagePickerControllerEditedImage] as? UIImage
+        {
+            photoImageView.image = img
+            
+        }
+        else if let img = info[UIImagePickerControllerOriginalImage] as? UIImage
+        {
+            photoImageView.image = img
+        }
         
         // Dismiss the picker.
         dismiss(animated: true, completion: nil)
@@ -112,6 +128,9 @@ class PetDetailViewController: UIViewController, UIPickerViewDataSource, UIPicke
         
         // Only allow photos to be picked, not taken.
         imagePickerController.sourceType = .photoLibrary
+        
+        //Make editing available
+        imagePickerController.allowsEditing = true
         
         // Make sure ViewController is notified when the user picks an image.
         imagePickerController.delegate = self

@@ -196,6 +196,11 @@ class PetTableViewController: UITableViewController {
                                 print("DEBUG: inside block is \(results) with changeTag \(changeTag) and an error of \(error)")
                                 print("Pets: \(self.pets)")
                                 pet.saveToLocal(petsToSave: self.pets)
+                                
+                                DispatchQueue.main.async {
+                                    self.tableView.reloadData()
+                                }
+                                
                                 print("Exiting completion block")
                             }
                     case .noAccount:
@@ -207,17 +212,27 @@ class PetTableViewController: UITableViewController {
                         //Save the record
                         pet.saveToLocal(petsToSave: self.pets)
                         //self.tableView.insertRows(at: [newIndexPath], with: .automatic)
+                        DispatchQueue.main.async {
+                            self.tableView.reloadData()
+                        }
                     case .restricted:
                         print("Sving pet to local data store")
                         self.pets.append(pet)
                         pet.saveToLocal(petsToSave: self.pets)
+                        DispatchQueue.main.async {
+                            self.tableView.reloadData()
+                        }
                     case .couldNotDetermine:
                         print("Sving pet to local data store")
                         self.pets.append(pet)
                         pet.saveToLocal(petsToSave: self.pets)
+                        DispatchQueue.main.async {
+                            self.tableView.reloadData()
+                        }
                     }
                 }
-                self.perform(#selector(self.createDataSet), with: nil, afterDelay: 5.0)
+                //TODO: test to see if all teh table reloads can be done here
+                //self.perform(#selector(self.createDataSet), with: nil, afterDelay: 5.0)
             }
         }
     }
