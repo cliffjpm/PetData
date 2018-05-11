@@ -49,6 +49,7 @@ class Pet: NSObject, NSCoding {
     //This init takes a remote record from iClound and creates a Pet
     init?(remoteRecord: CKRecord) {
         
+        //print("DEBUG: Is remoteRecord nil when initiating the list? \(remoteRecord)")
         
         //Note that these values come from Constants
         guard let petName = remoteRecord.object(forKey: RemotePet.petName) as? String
@@ -122,6 +123,28 @@ class Pet: NSObject, NSCoding {
         //print("DEBUG (Init) When creating a new dog the vaccine dictionary is: ")
         //print(self.vaccineDates)
         
+       
+        remoteRecord = CKRecord(recordType: RemoteRecords.pet, zoneID: ArendK9DB.share.zoneID)
+        remoteRecord?[RemotePet.petName] = petName as NSString
+        remoteRecord?[RemotePet.dob] = dob as NSDate?
+        remoteRecord?[RemotePet.petSex] = petSex as NSString?
+        //Some special handling to get the UIImage into a CKAsset
+        if let photo = photo {
+            let imageData:Data = UIImageJPEGRepresentation(photo, 1.0)!
+            let path:String = self.documentsDirectoryPath.appendingPathComponent(self.tempImageName)
+            try? UIImageJPEGRepresentation(photo, 1.0)!.write(to: URL(fileURLWithPath: path), options: [.atomic])
+            self.imageURL = URL(fileURLWithPath: path)
+            try? imageData.write(to: self.imageURL, options: [.atomic])
+            let File:CKAsset?  = CKAsset(fileURL: URL(fileURLWithPath: path))
+            remoteRecord?[RemotePet.photo] = File as! CKAsset
+        }
+        
+        //MARK: Put in Local as the recordName for records created locally but not stored to Cloud. Need to Test this offline to see if it work
+        recordName = "Local"
+        recordChangeTag = ""
+        
+        //print("DEBUG: When creating a record, the remote record is \(remoteRecord)")
+        
     }
     
     convenience init?(petName: String, dob: Date?, petSex: String?, photo: UIImage?){
@@ -144,48 +167,24 @@ class Pet: NSObject, NSCoding {
         _ error: NSError?) -> ())
     {
         
-        print("Saving to CloudKit...")
+        //print("Saving to CloudKit...")
+        //print("DEBUG: Is remoteRecord nil when saving? \(remoteRecord)")
         
         if remoteRecord == nil {
             remoteRecord = CKRecord(recordType: RemoteRecords.pet, zoneID: ArendK9DB.share.zoneID)
+            remoteRecord?[RemotePet.petName] = petName as NSString
+            remoteRecord?[RemotePet.dob] = dob as NSDate?
+            remoteRecord?[RemotePet.petSex] = petSex as NSString?
+            //Some special handling to get the UIImage into a CKAsset
+            if let photo = photo {
+                remoteRecord?[RemotePet.photo] = photoConverter(photo: photo)
+            }
         }
-        remoteRecord?[RemotePet.petName] = petName as NSString
-        remoteRecord?[RemotePet.dob] = dob as NSDate?
-        remoteRecord?[RemotePet.petSex] = petSex as NSString?
+        
+        
         
         //TODO: Figure out how to hande the refrence to vaccine dates or store a dictionary
         //remoteRecord?[RemotePet.vaccineDates] = vaccineDates as! Dictionary<String, Array<Date>>?
-        
-        
-        //Some special handling to get the UIImage into a CKAsset
-        if let photo = photo {
-            
-            let imageData:Data = UIImageJPEGRepresentation(photo, 1.0)!
-            let path:String = self.documentsDirectoryPath.appendingPathComponent(self.tempImageName)
-            try? UIImageJPEGRepresentation(photo, 1.0)!.write(to: URL(fileURLWithPath: path), options: [.atomic])
-            self.imageURL = URL(fileURLWithPath: path)
-            try? imageData.write(to: self.imageURL, options: [.atomic])
-            
-            let File:CKAsset?  = CKAsset(fileURL: URL(fileURLWithPath: path))
-            
-            remoteRecord?[RemotePet.photo] = File as CKAsset?
-        }
-        
-        
-        /*ArendK9DB.share.privateDB.save(remoteRecord!) {
-         record, error in
-         if let errorDescription = error?.localizedDescription {
-         print("Record error: \(errorDescription)")
-         } else {
-            print("Record is \(record)")
-            self.remoteRecord = record
-            self.remoteRecord?[RemotePet.recordName] = record?.recordID.recordName as NSString?
-            self.recordChangeTag = record?.recordChangeTag as String?
-            print("Change tag is \(String(describing: self.remoteRecord?.recordChangeTag))")
-            //self.changeRecords = [record] as! [CKRecord]
-            }
-         }*/
-        
         
         let saveOperation = CKModifyRecordsOperation(recordsToSave: [remoteRecord!], recordIDsToDelete: nil)
     
@@ -197,8 +196,9 @@ class Pet: NSObject, NSCoding {
                 print("Saving Record to Cloud: \(record)")
                 self.remoteRecord = record
                 self.remoteRecord?[RemotePet.recordName] = record.recordID.recordName as NSString?
+                self.recordName = record.recordID.recordName
                 self.recordChangeTag = record.recordChangeTag as String?
-                print("Change tag:  \(String(describing: self.remoteRecord?.recordChangeTag))")
+                //print("Change tag:  \(String(describing: self.remoteRecord?.recordChangeTag))")
                 
             }
             completion(self, self.recordChangeTag, nil)
@@ -262,7 +262,7 @@ class Pet: NSObject, NSCoding {
         aCoder.encode(vaccineDates, forKey: PropertyKey.vaccineDates)
         aCoder.encode(recordName, forKey: PropertyKey.recordName)
         aCoder.encode(recordChangeTag, forKey: PropertyKey.recordChangeTag)
-        print("ENCODING: \(petName) with change tag \(recordChangeTag)")
+        //print("ENCODING: \(petName) with change tag \(recordChangeTag)")
         //os_log("Encoding the Vaccine Dictionary was successful.", log: OSLog.default, type: .debug)
     }
     
@@ -289,5 +289,20 @@ class Pet: NSObject, NSCoding {
         self.init(petName: petName, dob: dob, petSex: petSex, photo: photo, vaccineDates: vaccineDates)
         
     }
+    
+    //MARK: Photo conversion
+    func photoConverter(photo: UIImage) -> CKAsset{
+        //Some special handling to get the UIImage into a CKAsset
+            
+            let imageData:Data = UIImageJPEGRepresentation(photo, 1.0)!
+            let path:String = self.documentsDirectoryPath.appendingPathComponent(self.tempImageName)
+            try? UIImageJPEGRepresentation(photo, 1.0)!.write(to: URL(fileURLWithPath: path), options: [.atomic])
+            self.imageURL = URL(fileURLWithPath: path)
+            try? imageData.write(to: self.imageURL, options: [.atomic])
+            let File:CKAsset?  = CKAsset(fileURL: URL(fileURLWithPath: path))
+        
+        return File!
+    }
+    
 }
 

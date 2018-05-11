@@ -59,18 +59,6 @@ class PetDetailViewController: UIViewController, UIPickerViewDataSource, UIPicke
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
         
-        //picker.allowsEditing = true
-        
-        print("DEBUG: the picker allows editing = \(picker.allowsEditing)")
-        
-        /* OLD CODE BEFORE CROPPING ADDED
-        // The info dictionary may contain multiple representations of the image. You want to use the original.
-        guard let selectedImage = info[UIImagePickerControllerOriginalImage] as? UIImage else {
-            fatalError("Expected a dictionary containing an image, but was provided the following: \(info)")
-        }
-        
-        // Set photoImageView to display the selected image.
-        photoImageView.image = selectedImage*/
  
         if let img = info[UIImagePickerControllerEditedImage] as? UIImage
         {
@@ -187,8 +175,14 @@ class PetDetailViewController: UIViewController, UIPickerViewDataSource, UIPicke
             return
         }
         
-        pet = Pet(petName: petNameField.text!, dob: dobSelected, petSex: sexSelected, photo: photoImageView.image)
+        pet?.petName = petNameField.text!
+        pet?.dob = dobSelected
+        pet?.petSex = sexSelected
+        pet?.photo = photoImageView.image
         
+        if pet?.recordName == nil {
+            pet = Pet(petName: petNameField.text!, dob: dobSelected, petSex: sexSelected, photo: photoImageView.image)
+        }
     }
     
     @IBAction func cancel(_ sender: UIBarButtonItem) {
@@ -203,7 +197,6 @@ class PetDetailViewController: UIViewController, UIPickerViewDataSource, UIPicke
         }
         else if let owningNavigationController = navigationController{
             owningNavigationController.popViewController(animated: true)
-            //print("DEBUG as you were not in add mode. This got called and the records got saved. Won't work for a New Dog if addimg meds at the same time")
         }
         else {
             fatalError("The ViewController is not inside a navigation controller.")

@@ -171,59 +171,106 @@ class PetTableViewController: UITableViewController {
     @IBAction func unwindToPetList(sender: UIStoryboardSegue) {
         if let sourceViewController = sender.source as? PetDetailViewController, let pet = sourceViewController.pet {
             
-            //print("DEBUG Unwind was called")
+            //NOTE: Taking the approach to update the UI first and then execture all the saves in the background
+            
+            pet.remoteRecord?.setValue(pet.petName, forKey: RemotePet.petName)
+            pet.remoteRecord?.setValue(pet.dob, forKey: RemotePet.dob)
+            pet.remoteRecord?.setValue(pet.petSex, forKey: RemotePet.petSex)
+            pet.remoteRecord?.setValue(pet.photoConverter(photo: pet.photo!), forKey: RemotePet.photo)
+            
+            
             if let selectedIndexPath = tableView.indexPathForSelectedRow {
-                // Update an existing dog.
-                print("TO DO: create code to udpate \(pet)")
+                // Update an existing pet
                 //print(dog.vaccineDates)
-                //pets[selectedIndexPath.row] = pet
-                //tableView.reloadRows(at: [selectedIndexPath], with: .none)
-            }
-            else {
+                
                 //Reset to onTheCloud before starting this check
                 self.onTheCloud = false
                 //Try to save to the CloudKit (creates recordName and recordChangeTag)
                 ArendK9DB.share.container.accountStatus { (accountStatus, error) in
                     switch accountStatus {
                     case .available:
-                        print("Saving pet to CloudKit")
+                        //print("Saving pet to CloudKit")
                         self.onTheCloud = true
-                        pet.saveToCloud(
-                            )
+                        //let recordID = CKRecordID(recordName: self.pets[selectedIndexPath.row].recordName!)
+                        //pet.remoteRecord = CKRecord(recordType: RemoteRecords.pet, recordID: recordID)
+                        //print("When Saving, the remote record is \(pet.remoteRecord)")
+                        pet.saveToCloud()
                             { (results , changeTag, error) -> () in
-                                print("Starting completion block")
-                                self.pets.append(results!)
-                                print("DEBUG: inside block is \(results) with changeTag \(changeTag) and an error of \(error)")
-                                print("Pets: \(self.pets)")
+                                //print("Starting completion block")
+                                self.pets[selectedIndexPath.row] = results!
+                                //print("DEBUG: inside block is \(results) with changeTag \(changeTag) and an error of \(error)")
+                                //print("Pets: \(self.pets)")
+                                //print("DEBUG: Pet remoteRecord returned is \(pet.remoteRecord)")
                                 pet.saveToLocal(petsToSave: self.pets)
-                                
+                                DispatchQueue.main.async {
+                                    self.tableView.reloadRows(at: [selectedIndexPath], with: .none)
+                                }
+                                //print("Exiting completion block")
+                        }
+                    case .noAccount:
+                        //print("Saving pet to local data store")
+                        //Update the pet in the array
+                        self.pets[selectedIndexPath.row] = pet
+                        //Save the record
+                        pet.saveToLocal(petsToSave: self.pets)
+                        DispatchQueue.main.async {
+                            self.tableView.reloadRows(at: [selectedIndexPath], with: .none)
+                        }
+                    case .restricted:
+                        self.pets[selectedIndexPath.row] = pet
+                        pet.saveToLocal(petsToSave: self.pets)
+                        DispatchQueue.main.async {
+                            self.tableView.reloadRows(at: [selectedIndexPath], with: .none)
+                        }
+                    case .couldNotDetermine:
+                        self.pets[selectedIndexPath.row] = pet
+                        pet.saveToLocal(petsToSave: self.pets)
+                        DispatchQueue.main.async {
+                            self.tableView.reloadRows(at: [selectedIndexPath], with: .none)
+                        }
+                    }
+                }
+                
+            }
+            else {
+                //Add a new record
+                //Reset to onTheCloud before starting this check
+                self.onTheCloud = false
+                //Try to save to the CloudKit (creates recordName and recordChangeTag)
+                ArendK9DB.share.container.accountStatus { (accountStatus, error) in
+                    switch accountStatus {
+                    case .available:
+                        //print("Saving pet to CloudKit")
+                        self.onTheCloud = true
+                        pet.saveToCloud()
+                            { (results , changeTag, error) -> () in
+                                //print("Starting completion block")
+                                self.pets.append(results!)
+                                //print("DEBUG: inside block is \(results) with changeTag \(changeTag) and an error of \(error)")
+                                //print("Pets: \(self.pets)")
+                                //print("DEBUG: Pet remoteRecord returned is \(pet.remoteRecord)")
+                                pet.saveToLocal(petsToSave: self.pets)
                                 DispatchQueue.main.async {
                                     self.tableView.reloadData()
                                 }
-                                
-                                print("Exiting completion block")
+                                //print("Exiting completion block")
                             }
                     case .noAccount:
-                        print("Sving pet to local data store")
-                        // Find the next row in the table
-                        //let newIndexPath = IndexPath(row: self.pets.count, section: 0)
+                        //print("Saving pet to local data store")
                         //Add the pet to the array
                         self.pets.append(pet)
                         //Save the record
                         pet.saveToLocal(petsToSave: self.pets)
-                        //self.tableView.insertRows(at: [newIndexPath], with: .automatic)
                         DispatchQueue.main.async {
                             self.tableView.reloadData()
                         }
                     case .restricted:
-                        print("Sving pet to local data store")
                         self.pets.append(pet)
                         pet.saveToLocal(petsToSave: self.pets)
                         DispatchQueue.main.async {
                             self.tableView.reloadData()
                         }
                     case .couldNotDetermine:
-                        print("Sving pet to local data store")
                         self.pets.append(pet)
                         pet.saveToLocal(petsToSave: self.pets)
                         DispatchQueue.main.async {
@@ -231,7 +278,7 @@ class PetTableViewController: UITableViewController {
                         }
                     }
                 }
-                //TODO: test to see if all teh table reloads can be done here
+                //TODO: test to see if all the table reloads can be done here
                 //self.perform(#selector(self.createDataSet), with: nil, afterDelay: 5.0)
             }
         }
@@ -275,7 +322,7 @@ class PetTableViewController: UITableViewController {
     //MARK: Try to load pets from iCloud
     @objc private func loadPets() -> [Pet]? {
         
-        print("DEBUG: loadPets was called")
+        //print("DEBUG: loadPets was called")
         
         if pets.count == 0 {
             let predicate = NSPredicate(value: true)
@@ -421,7 +468,7 @@ class PetTableViewController: UITableViewController {
         pets = []
         
         // Load any saved pets, otherwise load sample data.
-        print("onTheCloud is \(self.onTheCloud)")
+        //print("onTheCloud is \(self.onTheCloud)")
         
         //If connected to iCloud, load the data into the pets array
          if self.onTheCloud == true {
