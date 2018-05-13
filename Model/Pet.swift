@@ -40,7 +40,7 @@ class Pet: NSObject, NSCoding {
         static let petSex = "petSex"
         static let photo = "photo"
         static let vaccineDates = "vaccineDates"
-        static let recordName = "recordID"
+        static let recordName = "recordName"
         static let recordChangeTag = "recordChangeTag"
     }
     
@@ -74,7 +74,6 @@ class Pet: NSObject, NSCoding {
         self.petName = petName
         self.remoteRecord = remoteRecord
         
-        //print("DEBUG: ID is \(remoteRecord.recordID.recordName)  and record Change Tag is \(remoteRecord.recordChangeTag)")
         self.recordName = remoteRecord.recordID.recordName
         self.recordChangeTag = remoteRecord.recordChangeTag
         
@@ -96,7 +95,7 @@ class Pet: NSObject, NSCoding {
         self.dob = dob
     }
     
-    init?(petName: String, dob: Date?, petSex: String?, photo: UIImage?, vaccineDates: Dictionary<String, Array<Date>?>?) {
+    init?(petName: String, dob: Date?, petSex: String?, photo: UIImage?, vaccineDates: Dictionary<String, Array<Date>?>?, recordName: String?, recordChangeTag: String?) {
         //let formatter = DateFormatter()
         //formatter.dateFormat = "yyyy/MM/dd"
         //let day1 = formatter.date(from: "2016/10/08")
@@ -140,8 +139,18 @@ class Pet: NSObject, NSCoding {
         }
         
         //MARK: Put in Local as the recordName for records created locally but not stored to Cloud. Need to Test this offline to see if it work
-        recordName = "Local"
-        recordChangeTag = ""
+        if recordName == "" || recordName == nil {
+            self.recordName = "Local"
+        } else {
+            self.recordName = recordName
+            remoteRecord?[RemotePet.recordName] = recordName as NSString?
+        }
+        
+        if recordChangeTag == "" || recordChangeTag == nil {
+            self.recordChangeTag = ""
+        } else {
+            self.recordChangeTag = recordChangeTag
+        }
         
         //print("DEBUG: When creating a record, the remote record is \(remoteRecord)")
         
@@ -154,7 +163,7 @@ class Pet: NSObject, NSCoding {
         //print("DEBUG (Convenience) When creating a new dog the vaccine dictionary is: ")
         //print(vDates)
         
-        self.init(petName: petName, dob: dob, petSex: petSex, photo: photo, vaccineDates: vDates)
+        self.init(petName: petName, dob: dob, petSex: petSex, photo: photo, vaccineDates: vDates, recordName: "", recordChangeTag: nil)
         //os_log("These dogs were initialized with a Vaccine Dictionary.", log: OSLog.default, type: .debug)
     }
     
@@ -294,12 +303,12 @@ class Pet: NSObject, NSCoding {
         aCoder.encode(vaccineDates, forKey: PropertyKey.vaccineDates)
         aCoder.encode(recordName, forKey: PropertyKey.recordName)
         aCoder.encode(recordChangeTag, forKey: PropertyKey.recordChangeTag)
-        //print("ENCODING: \(petName) with change tag \(recordChangeTag)")
+        //print("ENCODING: \(petName) with recordName \(recordName) and  change tag \(recordChangeTag) but what I really need is the ID called \(remoteRecord?.recordID.recordName)")
         //os_log("Encoding the Vaccine Dictionary was successful.", log: OSLog.default, type: .debug)
     }
     
     required convenience init?(coder aDecoder: NSCoder) {
-        print("DEBUG: called the decoder")
+        //print("DEBUG: called the decoder")
         // The name is required. If we cannot decode a name string, the initializer should fail.
         guard let petName = aDecoder.decodeObject(forKey: PropertyKey.petName) as? String else {
             //os_log("Unable to decode the name for a Dog object.", log: OSLog.default, type: .debug)
@@ -316,11 +325,28 @@ class Pet: NSObject, NSCoding {
          //os_log("Decoding the Vaccine Dictionary was successful.>", log: OSLog.default, type: .debug)
         //print(vaccineDates)
         
-        print("DEBUG Decoding record for \(petName)")
+        /*let decoRemoteRecord = CKRecord(recordType: RemoteRecords.pet, zoneID: ArendK9DB.share.zoneID)
+        decoRemoteRecord[RemotePet.petName] = petName as NSString
+        decoRemoteRecord[RemotePet.dob] = dob as NSDate?
+        decoRemoteRecord[RemotePet.petSex] = petSex as NSString?
+        decoRemoteRecord[RemotePet.recordName] = recordName as NSString?
+        //decoRemoteRecord[RemotePet.recordChangeTag] = recordChangeTag as NSString?
+        //Some special handling to get the UIImage into a CKAsset
+        if let photo = photo {
+            let imageData:Data = UIImageJPEGRepresentation(photo, 1.0)!
+            let path:String = self.documentsDirectoryPath.appendingPathComponent(self.tempImageName)
+            try? UIImageJPEGRepresentation(photo, 1.0)!.write(to: URL(fileURLWithPath: path), options: [.atomic])
+            self.imageURL = URL(fileURLWithPath: path)
+            try? imageData.write(to: self.imageURL, options: [.atomic])
+            let File:CKAsset?  = CKAsset(fileURL: URL(fileURLWithPath: path))
+            decoRemoteRecord[RemotePet.photo] = File as! CKAsset
+        }*/
+        
+        //print("DEBUG Decoding record for \(petName) with recordName \(recordName) and  change tag \(recordChangeTag)")
         
         // Must call designated initializer.
-        self.init(petName: petName, dob: dob, petSex: petSex, photo: photo, vaccineDates: vaccineDates)
-        
+        self.init(petName: petName, dob: dob, petSex: petSex, photo: photo, vaccineDates: vaccineDates, recordName: recordName, recordChangeTag: recordChangeTag)
+        //self.init(remoteRecord: decoRemoteRecord)
     }
     
     //MARK: Photo conversion

@@ -283,7 +283,6 @@ class ArendK9DB {
         
         database.add(operation)
         
-        print("DEBUG: I got this far in the Notification")
         NotificationCenter.default.post(name: NSNotification.Name(rawValue: "load"), object: nil)
         
     }

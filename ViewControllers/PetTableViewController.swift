@@ -17,6 +17,7 @@ class PetTableViewController: UITableViewController {
     var pet: Pet?
     var onTheCloud = false
     var CKPet: Pet?
+    var localPets = [Pet]()
     
     //var tb: UITableView?
     
@@ -52,13 +53,6 @@ class PetTableViewController: UITableViewController {
 
         // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
         // self.navigationItem.rightBarButtonItem = self.editButtonItem
-        
-        /*TODO: Add code here to hide any records with a name including "Delete Me" at the end
-        for individualPet in pets{
-            if individualPet.petName.lowercased().range(of: "Delete Me") != nil{
-                print("Found one that said to delete me")
-            }
-        }*/
 
     }
     
@@ -142,11 +136,10 @@ class PetTableViewController: UITableViewController {
                     }
                 case .noAccount:
                     print("Delete from local data store - No Account")
-                    print("DEBUG the recond name is \(self.pets[indexPath.row].recordName)")
                     //Delete the pet locally if not on the Cloud or mark with "Delete Me" if already saved to cloud
                     if self.pets[indexPath.row].recordName == "Local" {
                         self.pets.remove(at: indexPath.row)
-                        print("DEBUG: What is the new set of pets \(self.pets)")
+                        //print("DEBUG: What is the new set of pets \(self.pets)")
                         self.pets[0].saveToLocal(petsToSave: self.pets)
                         //Remove the pet from the table
                         DispatchQueue.main.async {
@@ -166,7 +159,7 @@ class PetTableViewController: UITableViewController {
                     //Delete the pet locally if not on the Cloud or mark with "Delete Me" if already saved to cloud
                     if self.pets[indexPath.row].recordName == "Local" {
                         self.pets.remove(at: indexPath.row)
-                        print("DEBUG: What is the new set of pets \(self.pets)")
+                        //print("DEBUG: What is the new set of pets \(self.pets)")
                         self.pets[0].saveToLocal(petsToSave: self.pets)
                         //Remove the pet from the table
                         DispatchQueue.main.async {
@@ -283,8 +276,6 @@ class PetTableViewController: UITableViewController {
                     case .available:
                         //print("Saving pet to CloudKit")
                         self.onTheCloud = true
-                        //let recordID = CKRecordID(recordName: self.pets[selectedIndexPath.row].recordName!)
-                        //pet.remoteRecord = CKRecord(recordType: RemoteRecords.pet, recordID: recordID)
                         //print("When Saving, the remote record is \(pet.remoteRecord)")
                         pet.saveToCloud()
                             { (results , changeTag, error) -> () in
@@ -431,11 +422,48 @@ class PetTableViewController: UITableViewController {
                             self.pets.append(pet)
                         }
                     }
+                    
+                    
+                    //If these is local data, load it for comparison
+                    if var localPets = self.loadPetsLocal() {
+                        print("DEBUG There is a local data store in addition to a Cloud data")
+                        //print("DEBUG Local data is \(localPets)")
+                        //Iterate through the local data
+                        for localPet in localPets {
+                            //MARK: RECON DELETIONS (Offline deletions of CKRecords)
+                            //Check to see if the record is marked for deletion (marked while off the CloudKit)
+                            if localPet.petName.lowercased().range(of: "delete me") != nil{
+                                //If the record is marked for deletion, iterate through the pets array to find the related CKRecord
+                                for petToDelete in self.pets{
+                                    //print("DEBUG Comparing Local Record with name \(localPet.petName), recordName \(localPet.recordName) and remote record \(petToDelete.petName), recordName \(petToDelete.remoteRecord?.recordID.recordName)")
+                                    if localPet.recordName == petToDelete.remoteRecord?.recordID.recordName {
+                                        //Send the CKRecord for deletion
+                                        petToDelete.deleteFromCloud()
+                                            { (error) -> () in
+                                                //Remove the record from the local list and save the new list
+                                                //print("Deleted local record during recon \(petToDelete.petName)")
+                                                if let indexLocal = localPets.index(of: localPet){
+                                                    localPets.remove(at: indexLocal)
+                                                }
+                                                //Remone the record from the pets arrary before displaying the table
+                                                if let index = self.pets.index(of: petToDelete){
+                                                    self.pets.remove(at: index)
+                                                }
+                                                
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    
                     DispatchQueue.main.async {
                         self.tableView.reloadData()
                     }
                 }
             }
+
         }
         else{
             pets = []
@@ -464,7 +492,7 @@ class PetTableViewController: UITableViewController {
     }
     
     //MARK: Try to load records from the local archive if no iCloud connectivity exists
-    @objc private func loadPetsLocal() -> [Pet]?  {
+    private func loadPetsLocal() -> [Pet]?  {
             return NSKeyedUnarchiver.unarchiveObject(withFile: Pet.ArchiveURL.path) as? [Pet]
     }
     
@@ -528,7 +556,7 @@ class PetTableViewController: UITableViewController {
          print(latestMed)
          }*/
         
-        guard let pet1 = Pet(petName: "Winnie", dob: today, petSex: "Female", photo: photo1, vaccineDates: vaccines) else {
+        guard let pet1 = Pet(petName: "Winnie", dob: today, petSex: "Female", photo: photo1, vaccineDates: vaccines, recordName: "Local", recordChangeTag: nil) else {
             fatalError("Unable to instantiate pet1")
         }
         
@@ -537,11 +565,11 @@ class PetTableViewController: UITableViewController {
         let dayNew = formatter.date(from: "1961/01/11")
         vaccines[newMed] = [dayNew!]
         
-        guard let pet2 = Pet(petName: "Suzi", dob: nil, petSex: "Female", photo: photo2, vaccineDates: vaccines) else {
+        guard let pet2 = Pet(petName: "Suzi", dob: nil, petSex: "Female", photo: photo2, vaccineDates: vaccines,recordName: "Local", recordChangeTag: nil) else {
             fatalError("Unable to instantiate dog2")
         }
         
-        guard let pet3 = Pet(petName: "Albus", dob: nil, petSex: nil, photo: photo3, vaccineDates: vaccines) else {
+        guard let pet3 = Pet(petName: "Albus", dob: nil, petSex: nil, photo: photo3, vaccineDates: vaccines, recordName: "Local", recordChangeTag: nil) else {
             fatalError("Unable to instantiate dog3")
         }
         
