@@ -23,6 +23,9 @@ class PetTableViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        // Use the edit button item provided by the table view controller.
+        navigationItem.leftBarButtonItem = editButtonItem
+        
         //Confirm connectivity with iCloud
         testForICloud()
         
@@ -49,6 +52,14 @@ class PetTableViewController: UITableViewController {
 
         // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
         // self.navigationItem.rightBarButtonItem = self.editButtonItem
+        
+        /*TODO: Add code here to hide any records with a name including "Delete Me" at the end
+        for individualPet in pets{
+            if individualPet.petName.lowercased().range(of: "Delete Me") != nil{
+                print("Found one that said to delete me")
+            }
+        }*/
+
     }
     
 
@@ -76,7 +87,7 @@ class PetTableViewController: UITableViewController {
         }
 
         let pet = pets[indexPath.row]
-       
+        
         // Date Formatter
         let dateFormatter = DateFormatter()
         dateFormatter.dateStyle = .short
@@ -106,17 +117,98 @@ class PetTableViewController: UITableViewController {
     }
     */
 
-    /*
+    
     // Override to support editing the table view.
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
-            // Delete the row from the data source
-            tableView.deleteRows(at: [indexPath], with: .fade)
+           
+            //Reset to onTheCloud before starting this check
+            self.onTheCloud = false
+            //Try to save to the CloudKit (creates recordName and recordChangeTag)
+            ArendK9DB.share.container.accountStatus { (accountStatus, error) in
+                switch accountStatus {
+                case .available:
+                    print("Since you are on the Cloud, start to delete from CloudKit")
+                    self.onTheCloud = true
+                    self.pets[indexPath.row].deleteFromCloud()
+                        { (error) -> () in
+                            print("Starting completion block")
+                            self.pets.remove(at: indexPath.row)
+                            self.pets[0].saveToLocal(petsToSave: self.pets)
+                            DispatchQueue.main.async {
+                                    self.tableView.deleteRows(at: [indexPath], with: .fade)
+                            }
+                            print("Exiting completion block")
+                    }
+                case .noAccount:
+                    print("Delete from local data store - No Account")
+                    print("DEBUG the recond name is \(self.pets[indexPath.row].recordName)")
+                    //Delete the pet locally if not on the Cloud or mark with "Delete Me" if already saved to cloud
+                    if self.pets[indexPath.row].recordName == "Local" {
+                        self.pets.remove(at: indexPath.row)
+                        print("DEBUG: What is the new set of pets \(self.pets)")
+                        self.pets[0].saveToLocal(petsToSave: self.pets)
+                        //Remove the pet from the table
+                        DispatchQueue.main.async {
+                            self.tableView.deleteRows(at: [indexPath], with: .fade)
+                        }
+                    }
+                    else{
+                        self.pets[indexPath.row].petName.append(" Delete Me")
+                        self.pets[0].saveToLocal(petsToSave: self.pets)
+                        //Remove the pet from the table
+                        DispatchQueue.main.async {
+                            self.tableView.reloadData()
+                        }
+                    }
+                case .restricted:
+                    print("Delete from local data store")
+                    //Delete the pet locally if not on the Cloud or mark with "Delete Me" if already saved to cloud
+                    if self.pets[indexPath.row].recordName == "Local" {
+                        self.pets.remove(at: indexPath.row)
+                        print("DEBUG: What is the new set of pets \(self.pets)")
+                        self.pets[0].saveToLocal(petsToSave: self.pets)
+                        //Remove the pet from the table
+                        DispatchQueue.main.async {
+                            self.tableView.deleteRows(at: [indexPath], with: .fade)
+                        }
+                    }
+                    else{
+                        self.pets[indexPath.row].petName.append(" Delete Me")
+                        self.pets[0].saveToLocal(petsToSave: self.pets)
+                        //Remove the pet from the table
+                        DispatchQueue.main.async {
+                            self.tableView.reloadData()
+                        }
+                    }
+                case .couldNotDetermine:
+                    print("Delete from local data store")
+                    //Delete the pet locally if not on the Cloud or mark with "Delete Me" if already saved to cloud
+                    if self.pets[indexPath.row].recordName == "Local" {
+                        self.pets.remove(at: indexPath.row)
+                        self.pets[0].saveToLocal(petsToSave: self.pets)
+                        //Remove the pet from the table
+                        DispatchQueue.main.async {
+                            self.tableView.deleteRows(at: [indexPath], with: .fade)
+                        }
+                    }
+                    else{
+                        self.pets[indexPath.row].petName.append(" Delete Me")
+                        self.pets[0].saveToLocal(petsToSave: self.pets)
+                        //Remove the pet from the table
+                        DispatchQueue.main.async {
+                            self.tableView.reloadData()
+                        }
+                    }
+                }
+            }
+            
+            os_log("Pets successfully deleted.", log: OSLog.default, type: .debug)
         } else if editingStyle == .insert {
             // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
         }    
     }
-    */
+    
 
     /*
     // Override to support rearranging the table view.
@@ -230,7 +322,6 @@ class PetTableViewController: UITableViewController {
                         }
                     }
                 }
-                
             }
             else {
                 //Add a new record

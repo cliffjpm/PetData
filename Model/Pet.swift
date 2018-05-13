@@ -158,8 +158,8 @@ class Pet: NSObject, NSCoding {
         //os_log("These dogs were initialized with a Vaccine Dictionary.", log: OSLog.default, type: .debug)
     }
     
+    
     //MARK: Save function for iCloud
-    //func saveToCloud() -> Pet {
     func saveToCloud(
         completion: @escaping (
         _ results: Pet?,
@@ -181,13 +181,11 @@ class Pet: NSObject, NSCoding {
             }
         }
         
-        
-        
         //TODO: Figure out how to hande the refrence to vaccine dates or store a dictionary
         //remoteRecord?[RemotePet.vaccineDates] = vaccineDates as! Dictionary<String, Array<Date>>?
         
         let saveOperation = CKModifyRecordsOperation(recordsToSave: [remoteRecord!], recordIDsToDelete: nil)
-    
+        
         saveOperation.perRecordCompletionBlock = {
             record, error in
             if error != nil {
@@ -210,29 +208,63 @@ class Pet: NSObject, NSCoding {
         
         /*This code was designed for using NS data. I did not take this route
          // obtain the metadata from the CKRecord
-        let data = NSMutableData()
-        let coder = NSKeyedArchiver.init(forWritingWith: data)
-        coder.requiresSecureCoding = true
-        remoteRecord?.encodeSystemFields(with: coder)
-        coder.finishEncoding()
-        
-        // store this metadata on your local object
-        self.encodedSystemFields = data as Data*/
+         let data = NSMutableData()
+         let coder = NSKeyedArchiver.init(forWritingWith: data)
+         coder.requiresSecureCoding = true
+         remoteRecord?.encodeSystemFields(with: coder)
+         coder.finishEncoding()
+         
+         // store this metadata on your local object
+         self.encodedSystemFields = data as Data*/
         
         /*ArendK9DB.share.privateDB.fetch(withRecordID: (self.remoteRecord?.recordID)!, completionHandler: { (record: CKRecord?, e: Error?) in
-            if e != nil {
-                print("ERROR: \(String(describing: e))")
-                return
-            }
-            else {
-                //Change a value
-                self.recordChangeTag = record?.recordChangeTag
-                }
-            }
-        )*/
+         if e != nil {
+         print("ERROR: \(String(describing: e))")
+         return
+         }
+         else {
+         //Change a value
+         self.recordChangeTag = record?.recordChangeTag
+         }
+         }
+         )*/
         
     }
     
+    
+    //MARK: Delete function for iCloud
+    func deleteFromCloud(
+        completion: @escaping (
+        _ error: NSError?) -> ())
+    {
+        
+        print("Deleting from CloudKit record for \(remoteRecord)")
+        //print("DEBUG: Is remoteRecord nil when deleting? \(remoteRecord)")
+        
+        
+        //TODO: Figure out how to hande the refrence to vaccine dates or store a dictionary
+        //remoteRecord?[RemotePet.vaccineDates] = vaccineDates as! Dictionary<String, Array<Date>>?
+        
+        let deleteOperation = CKModifyRecordsOperation(recordsToSave: nil, recordIDsToDelete: [remoteRecord!.recordID])
+        
+        deleteOperation.perRecordCompletionBlock = {
+            record, error in
+            if error != nil {
+                print(error!.localizedDescription)
+                completion(error as! NSError)
+            } else {
+                print("Deleting Record from Cloud: \(record)")
+                completion(nil)
+            }
+        }
+        
+        ArendK9DB.share.privateDB.add(deleteOperation)
+        
+        completion(nil)
+    }
+    
+    
+    //MARK: Save to local
     @objc func saveToLocal(petsToSave: [Pet]) {
         print("Processing local save ...")
         
@@ -284,6 +316,7 @@ class Pet: NSObject, NSCoding {
          //os_log("Decoding the Vaccine Dictionary was successful.>", log: OSLog.default, type: .debug)
         //print(vaccineDates)
         
+        print("DEBUG Decoding record for \(petName)")
         
         // Must call designated initializer.
         self.init(petName: petName, dob: dob, petSex: petSex, photo: photo, vaccineDates: vaccineDates)
