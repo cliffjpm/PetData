@@ -94,7 +94,7 @@ class ArendK9DB {
         
         let notificationInfo = CKNotificationInfo()
         notificationInfo.alertBody = "PetData has updated data available."
-        notificationInfo.shouldBadge = true
+        notificationInfo.shouldBadge = false
         notificationInfo.shouldSendContentAvailable = true
         subscription.notificationInfo = notificationInfo
         

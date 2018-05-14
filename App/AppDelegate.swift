@@ -37,7 +37,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         
         //Authorize alerting
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) {
+        //UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) {
             granted, error in
             if error != nil {
                 print("Notification error: \(error!.localizedDescription)")
@@ -64,6 +65,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         //let viewController = self.window?.rootViewController as? ViewController
         //guard let viewController = self.window?.rootViewController as? ViewController else { return }
+        
         
         let dict = userInfo as! [String: NSObject]
         guard let notification:CKDatabaseNotification = CKNotification(fromRemoteNotificationDictionary:dict) as? CKDatabaseNotification else { return }
