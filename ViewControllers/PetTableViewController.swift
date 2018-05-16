@@ -27,7 +27,7 @@ class PetTableViewController: UITableViewController {
         // Use the edit button item provided by the table view controller.
         navigationItem.leftBarButtonItem = editButtonItem
         
-        //Confirm connectivity with iCloud
+        //Confirm connectivity with iCloud AND this calls to createDataSet()
         testForICloud()
         
         //Set custom zone
@@ -114,11 +114,12 @@ class PetTableViewController: UITableViewController {
     
     // Override to support editing the table view.
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+        //Handle a deletion
         if editingStyle == .delete {
            
             //Reset to onTheCloud before starting this check
             self.onTheCloud = false
-            //Try to save to the CloudKit (creates recordName and recordChangeTag)
+            //The Deletion is wrapped with a completion handler checking for CloudKit status
             ArendK9DB.share.container.accountStatus { (accountStatus, error) in
                 switch accountStatus {
                 case .available:
@@ -405,7 +406,6 @@ class PetTableViewController: UITableViewController {
     @objc private func loadPets() -> [Pet]? {
         
         //print("DEBUG: loadPets was called")
-        
         if pets.count == 0 {
             let predicate = NSPredicate(value: true)
             let query = CKQuery(recordType: RemoteRecords.pet, predicate: predicate)
@@ -422,8 +422,6 @@ class PetTableViewController: UITableViewController {
                             self.pets.append(pet)
                         }
                     }
-                    
-                    
                     //If these is local data, load it for comparison
                     if var localPets = self.loadPetsLocal() {
                         print("DEBUG There is a local data store in addition to a Cloud data")
@@ -449,23 +447,27 @@ class PetTableViewController: UITableViewController {
                                                 if let index = self.pets.index(of: petToDelete){
                                                     self.pets.remove(at: index)
                                                 }
-                                                
                                         }
                                     }
                                 }
                             }
+                            //MARK: RECON NEW RECORDS (Offline creation of new recoreds)
+                            
+                            //Save the deletion to the localPets array
+                            self.localPets = localPets
                         }
                     }
-                    
-                    
+                    //Save the update localPet and update the table
+                    self.localPets[0].saveToLocal(petsToSave: self.localPets)
                     DispatchQueue.main.async {
                         self.tableView.reloadData()
                     }
                 }
             }
-
         }
         else{
+            print("DEBUG As you already had data and pets was not empty, NO recon was performed. This is just a full refresh of the CKRecords.")
+            
             pets = []
             let predicate = NSPredicate(value: true)
             let query = CKQuery(recordType: RemoteRecords.pet, predicate: predicate)
@@ -614,6 +616,5 @@ class PetTableViewController: UITableViewController {
             }
         }
     }
-    
  
 }
