@@ -23,6 +23,7 @@ class Pet: NSObject, NSCoding {
     var recordChangeTag: String?
     
     static var cloudPets = [CKRecord]()
+    static var changedRecord: CKRecord? = nil
     
     //var changeRecords: [CKRecord]?
     //var newRecord: CKRecord? = nil
@@ -31,9 +32,9 @@ class Pet: NSObject, NSCoding {
     //DICTIONARIES unordered pair of key, value pairs of vaccines
     var vaccineDates: [String: Array<Date>?]? = [:]
     
-    let documentsDirectoryPath:NSString = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as NSString
-    var imageURL: URL!
-    let tempImageName = "Image2.jpg"
+    static let documentsDirectoryPath:NSString = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as NSString
+    static var imageURL: URL!
+    static let tempImageName = "Image2.jpg"
     
     //MARK: Types
     struct PropertyKey {
@@ -132,10 +133,10 @@ class Pet: NSObject, NSCoding {
         //Some special handling to get the UIImage into a CKAsset
         if let photo = photo {
             let imageData:Data = UIImageJPEGRepresentation(photo, 1.0)!
-            let path:String = self.documentsDirectoryPath.appendingPathComponent(self.tempImageName)
+            let path:String = Pet.documentsDirectoryPath.appendingPathComponent(Pet.tempImageName)
             try? UIImageJPEGRepresentation(photo, 1.0)!.write(to: URL(fileURLWithPath: path), options: [.atomic])
-            self.imageURL = URL(fileURLWithPath: path)
-            try? imageData.write(to: self.imageURL, options: [.atomic])
+            Pet.imageURL = URL(fileURLWithPath: path)
+            try? imageData.write(to: Pet.imageURL, options: [.atomic])
             let File:CKAsset?  = CKAsset(fileURL: URL(fileURLWithPath: path))
             remoteRecord?[RemotePet.photo] = File as! CKAsset
         }
@@ -174,6 +175,7 @@ class Pet: NSObject, NSCoding {
         
         var pets = [Pet]()
         var petsToDelete = [CKRecordID]()
+        var petsToSave = [CKRecord]()
         
         //Empty any existing pet array
         //TODO: Test to see if you can remove this statement as I think it is not used
@@ -189,84 +191,60 @@ class Pet: NSObject, NSCoding {
             print("DEBUG I have cloud pets in my RECON: \(cloudPets)")
         
         
-        //Put all new records (recordName = "Local") into an array for saving to CloudKit
-        for localPet in localPets! {
-            //MARK: RECON DELETIONS (Offline deletions of CKRecords)
-            //Check to see if the record is marked for deletion (marked while off the CloudKit)
-            if localPet.petName.lowercased().range(of: "delete me") != nil{
-                //If the record is marked for deletion, iterate through the pets array to find the related CKRecord
-                for petToDelete in cloudPets{
-                    //print("DEBUG Comparing Local Record with name \(localPet.petName), recordName \(localPet.recordName) and remote record \(petToDelete.petName), recordName \(petToDelete.remoteRecord?.recordID.recordName)")
-                    if localPet.recordName == petToDelete.recordID.recordName{
-                        //Put this record into the deletion array of CKRecordIDs
-                        petsToDelete.append(petToDelete.recordID)
+            //Put all new records (recordName = "Local") into an array for saving to CloudKit
+            for localPet in localPets! {
+                //MARK: RECON DELETIONS (Offline deletions of CKRecords)
+                //Check to see if the record is marked for deletion (marked while off the CloudKit)
+                if localPet.petName.lowercased().range(of: "delete me") != nil{
+                    //If the record is marked for deletion, iterate through the pets array to find the related CKRecord
+                    for petToDelete in cloudPets{
+                        //print("DEBUG Comparing Local Record with name \(localPet.petName), recordName \(localPet.recordName) and remote record \(petToDelete.petName), recordName \(petToDelete.remoteRecord?.recordID.recordName)")
+                        if localPet.recordName == petToDelete.recordID.recordName{
+                            //Put this record into the deletion array of CKRecordIDs
+                            petsToDelete.append(petToDelete.recordID)
+                        }
                     }
                 }
-            }
             
             //MARK: RECON NEW RECORDS (Offline creation of new recoreds)
+                if localPet.recordName == "Local" {
+                    changedRecord = CKRecord(recordType: RemoteRecords.pet, zoneID: ArendK9DB.share.zoneID)
+                    changedRecord?[RemotePet.petName] = localPet.petName as NSString
+                    changedRecord?[RemotePet.dob] = localPet.dob as NSDate?
+                    changedRecord?[RemotePet.petSex] = localPet.petSex as NSString?
+                    //Some special handling to get the UIImage into a CKAsset
+                    if let photo = localPet.photo {
+                        let imageData:Data = UIImageJPEGRepresentation(photo, 1.0)!
+                        let path:String = Pet.documentsDirectoryPath.appendingPathComponent(Pet.tempImageName)
+                        try? UIImageJPEGRepresentation(photo, 1.0)!.write(to: URL(fileURLWithPath: path), options: [.atomic])
+                        Pet.imageURL = URL(fileURLWithPath: path)
+                        try? imageData.write(to: Pet.imageURL, options: [.atomic])
+                        let File:CKAsset?  = CKAsset(fileURL: URL(fileURLWithPath: path))
+                        changedRecord?[RemotePet.photo] = File as! CKAsset
+                    }
+                    petsToSave.append(changedRecord!)
+                }
             
+                //Take all changed records (recordChangeTag = "") and compare them against the CKRecord
+                //UPdate the CKRecord values IF the last modificaiton date is more recent on the local record
+                //Add updated CKRecords to the save array (started with the new records)
+                
             print("DEBUG The array of records to delete contains \(petsToDelete)")
+            print("DEBUG The array of records to save contains \(petsToSave)")
             
+            //Execute the operation
+                
+            }
         }
-        }
-        //take all the records marked "Delete Me", match them with a CKRecord.
-        //Put the CKRecords into an array for deletion
         
-        //Take all changed records (recordChangeTag = "") and compare them against the CKRecord
-        //UPdate the CKRecord values IF the last modificaiton date is more recent on the local record
-        //Add updated CKRecords to the save array (started with the new records)
         
-        //Execute the operation
+        
+        
         
         //Grab the new, updated list of CKRecords
         //Save this new array locally
         
-        /*
-        
-                //If these is local data, load it for comparison
-                if var localPets = self.loadPetsLocal() {
-                    print("DEBUG There is a local data store in addition to a Cloud data")
-                    //print("DEBUG Local data is \(localPets)")
-                    //Iterate through the local data
-                    for localPet in localPets {
-                        //MARK: RECON DELETIONS (Offline deletions of CKRecords)
-                        //Check to see if the record is marked for deletion (marked while off the CloudKit)
-                        if localPet.petName.lowercased().range(of: "delete me") != nil{
-                            //If the record is marked for deletion, iterate through the pets array to find the related CKRecord
-                            for petToDelete in self.pets{
-                                //print("DEBUG Comparing Local Record with name \(localPet.petName), recordName \(localPet.recordName) and remote record \(petToDelete.petName), recordName \(petToDelete.remoteRecord?.recordID.recordName)")
-                                if localPet.recordName == petToDelete.remoteRecord?.recordID.recordName {
-                                    //Send the CKRecord for deletion
-                                    petToDelete.deleteFromCloud()
-                                        { (error) -> () in
-                                            //Remove the record from the local list and save the new list
-                                            //print("Deleted local record during recon \(petToDelete.petName)")
-                                            if let indexLocal = localPets.index(of: localPet){
-                                                localPets.remove(at: indexLocal)
-                                            }
-                                            //Remone the record from the pets arrary before displaying the table
-                                            if let index = self.pets.index(of: petToDelete){
-                                                self.pets.remove(at: index)
-                                            }
-                                    }
-                                }
-                            }
-                        }
-                        //MARK: RECON NEW RECORDS (Offline creation of new recoreds)
-                        
-                        //Save the deletion to the localPets array
-                        self.localPets = localPets
-                    }
-                }
-                //Save the update localPet and update the table
-                self.localPets[0].saveToLocal(petsToSave: self.localPets)
-                DispatchQueue.main.async {
-                    self.tableView.reloadData()
-                }
-            }
-        }
-        */
+
         return pets
     }
     
@@ -291,7 +269,7 @@ class Pet: NSObject, NSCoding {
                 guard let records = records else {
                     return
                 }
-                print("Fetching from CloudKit... ending completion handler with petCache = \(records)")
+                //print("DEBUG Fetching from CloudKit... ending completion handler with petCache = \(records)")
                 completion(records, nil)
                 }
             }
@@ -487,10 +465,10 @@ class Pet: NSObject, NSCoding {
         //Some special handling to get the UIImage into a CKAsset
             
             let imageData:Data = UIImageJPEGRepresentation(photo, 1.0)!
-            let path:String = self.documentsDirectoryPath.appendingPathComponent(self.tempImageName)
+            let path:String = Pet.documentsDirectoryPath.appendingPathComponent(Pet.tempImageName)
             try? UIImageJPEGRepresentation(photo, 1.0)!.write(to: URL(fileURLWithPath: path), options: [.atomic])
-            self.imageURL = URL(fileURLWithPath: path)
-            try? imageData.write(to: self.imageURL, options: [.atomic])
+            Pet.imageURL = URL(fileURLWithPath: path)
+            try? imageData.write(to: Pet.imageURL, options: [.atomic])
             let File:CKAsset?  = CKAsset(fileURL: URL(fileURLWithPath: path))
         
         return File!
