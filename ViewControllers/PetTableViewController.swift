@@ -267,8 +267,7 @@ class PetTableViewController: UITableViewController {
             
             if let selectedIndexPath = tableView.indexPathForSelectedRow {
                 // Update an existing pet
-                //print(dog.vaccineDates)
-                
+    
                 //Reset to onTheCloud before starting this check
                 self.onTheCloud = false
                 //Try to save to the CloudKit (creates recordName and recordChangeTag)
@@ -316,7 +315,8 @@ class PetTableViewController: UITableViewController {
                 }
             }
             else {
-                //Add a new record
+                //Add a new pet
+                
                 //Reset to onTheCloud before starting this check
                 self.onTheCloud = false
                 //Try to save to the CloudKit (creates recordName and recordChangeTag)
@@ -404,6 +404,9 @@ class PetTableViewController: UITableViewController {
     
     //MARK: Try to load pets from iCloud
     @objc private func loadPets() -> [Pet]? {
+        
+        print("DEBUG Calling the recon function in PET")
+        Pet.recon()
         
         //print("DEBUG: loadPets was called")
         if pets.count == 0 {
@@ -588,17 +591,14 @@ class PetTableViewController: UITableViewController {
         //Start with an empty array
         pets = []
         
-        // Load any saved pets, otherwise load sample data.
-        //print("onTheCloud is \(self.onTheCloud)")
-        
-        //If connected to iCloud, load the data into the pets array
+        //If CONNECTED to iCloud, load the data into the pets array
          if self.onTheCloud == true {
             if let savedPets = loadPets() {
                 print("DEBUG: Getting pets from iCloud")
                 pets += savedPets
             }
         }
-        //If NOT connected to iCloud...
+        //If NOT CONNECTED to iCloud...
         else {
             if let savedPets = loadPetsLocal() {
                 print("DEBUG: Getting pets from Local Cache")
@@ -607,9 +607,9 @@ class PetTableViewController: UITableViewController {
                     self.tableView.reloadData()
                 }
             }
-            //There is no local data
+            //There is NO LOCAL data
             else {
-                // Load the sample data.
+                // LOAD SAMPLE data.
                 print("DEBUG: Getting pets from Samples")
                 loadSamples()
                 //TODO: Call save to local and try save to iCloud
