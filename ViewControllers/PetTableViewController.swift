@@ -42,12 +42,6 @@ class PetTableViewController: UITableViewController {
         
         NotificationCenter.default.addObserver(self, selector: #selector(PetTableViewController.loadPets), name: NSNotification.Name(rawValue: "load"), object: nil)
         
-        
-        /*tb = self.tableView
-        tb?.dataSource = self
-        tb?.delegate = self
-        super.view.addSubview((tb)!)*/
-        
         // Uncomment the following line to preserve selection between presentations
         // self.clearsSelectionOnViewWillAppear = false
 
@@ -63,7 +57,6 @@ class PetTableViewController: UITableViewController {
     }
 
     // MARK: - Table view data source
-
     override func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
@@ -72,7 +65,6 @@ class PetTableViewController: UITableViewController {
         return pets.count
     }
 
-    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cellIdentifier = "PetTableViewCell"
         
@@ -101,8 +93,6 @@ class PetTableViewController: UITableViewController {
         return cell
     }
     
-   
-
     /*
     // Override to support conditional editing of the table view.
     override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
@@ -110,7 +100,6 @@ class PetTableViewController: UITableViewController {
         return true
     }
     */
-
     
     // Override to support editing the table view.
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
@@ -203,7 +192,6 @@ class PetTableViewController: UITableViewController {
         }    
     }
     
-
     /*
     // Override to support rearranging the table view.
     override func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
@@ -219,9 +207,8 @@ class PetTableViewController: UITableViewController {
     }
     */
 
-    
-    // MARK: - Navigation
 
+    // MARK: - Navigation
     // In a storyboard-based application, you will often want to do a little preparation before navigation
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         
@@ -405,8 +392,8 @@ class PetTableViewController: UITableViewController {
     //MARK: Try to load pets from iCloud
     @objc private func loadPets() -> [Pet]? {
         
-        print("DEBUG Calling the recon function in PET")
-        Pet.recon()
+        //print("DEBUG Calling the recon function in PET")
+        //Pet.recon()
         
         //print("DEBUG: loadPets was called")
         if pets.count == 0 {
@@ -593,16 +580,31 @@ class PetTableViewController: UITableViewController {
         
         //If CONNECTED to iCloud, load the data into the pets array
          if self.onTheCloud == true {
-            if let savedPets = loadPets() {
-                print("DEBUG: Getting pets from iCloud")
-                pets += savedPets
+            Pet.recon(){ (results , error) -> () in
+                //print("DEBUG This is where I need to load in the new array of pets from CloudKit")
+                if error != nil {
+                    print(error?.localizedDescription ?? "General Query Error: No Description")
+                } else {
+                    self.pets = results
+                    DispatchQueue.main.async {
+                        self.tableView.reloadData()
+                    }
+                    
+                    /*This was the method used before I came up with Recon
+                    if let savedPets = self.loadPets() {
+                     print("DEBUG: Getting pets from iCloud")
+                     self.pets += savedPets
+                     }*/
+                    
+                }
             }
+            
         }
         //If NOT CONNECTED to iCloud...
         else {
             if let savedPets = loadPetsLocal() {
                 print("DEBUG: Getting pets from Local Cache")
-                pets += savedPets
+                pets = savedPets
                 DispatchQueue.main.async {
                     self.tableView.reloadData()
                 }
