@@ -182,28 +182,22 @@ class Pet: NSObject, NSCoding {
         var petsToSave = [CKRecord]()
         
         //Empty any existing pet array
-        //TODO: Test to see if you can remove this statement as I think it is not used
         pets = []
         
         //load local pets into an array
         if let localPets = loadPetsLocal()  {
             
-        //print("DEBUG I have local pets in my RECON: \(localPets)")
-        
         //Set up the array for CloudKit Pets
         fetchFromCloud(){ (results , error) -> () in
             cloudPets = results
-            //print("DEBUG I have cloud pets in my RECON: \(cloudPets)")
-        
         
             //Use records marked for deletion to mark the CKRecords for deletion and put them into an array for saving to CloudKit
             for localPet in localPets {
                 //MARK: RECON DELETIONS (Offline deletions of CKRecords)
-                //Check to see if the record is marked for deletion (marked while off the CloudKit)
+                //Check to see if the record is marked for deletion (marked while off the CloudKit) and put them in an array
                 if localPet.petName.lowercased().range(of: "delete me") != nil{
                     //If the record is marked for deletion, iterate through the pets array to find the related CKRecord
                     for petToDelete in cloudPets{
-                        //print("DEBUG Comparing Local Record with name \(localPet.petName), recordName \(localPet.recordName) and remote record \(petToDelete.petName), recordName \(petToDelete.remoteRecord?.recordID.recordName)")
                         if localPet.recordName == petToDelete.recordID.recordName{
                             //Put this record into the deletion array of CKRecordIDs
                             petsToDelete.append(petToDelete.recordID)
@@ -237,6 +231,7 @@ class Pet: NSObject, NSCoding {
             print("DEBUG The array of records to delete contains \(petsToDelete)")
             print("DEBUG The array of records to save contains \(petsToSave)")
             
+            //If nothing changed, just return the original array
             if petsToDelete == [] && petsToSave == [] {
                 print("DEBUG I have nothing to save")
                 if error != nil {
@@ -253,6 +248,7 @@ class Pet: NSObject, NSCoding {
                     completion(pets, nil)
                 }
             } else {
+                //Save the new and deleted records to CloudKit
                 saveUpdateCloud(petsToSave: petsToSave, recordIDsToDeleve: petsToDelete)
                     { (results , error) -> () in
                         if error != nil {
@@ -305,7 +301,7 @@ class Pet: NSObject, NSCoding {
     }
     
     
-    //MARK: Fetch current recrods from CloudKit
+    //MARK: Fetch current records from CloudKit
     static func fetchFromCloud(
         completion: @escaping (
         _ results: [CKRecord],
@@ -314,26 +310,9 @@ class Pet: NSObject, NSCoding {
         
         print("Fetch from CloudKit... starting completion handler")
         
-        //var results = [CKRecord]()
-        
-        //loud CloudKit data into an arry for reference
+        //Retrieve CloudKit data into an arry for reference
         let predicate = NSPredicate(value: true)
         let query = CKQuery(recordType: RemoteRecords.pet, predicate: predicate)
-        //ArendK9DB.share.privateDB.perform(query, inZoneWith: ArendK9DB.share.zoneID, nil, completion: (results: [Pet], error: NSError?) in
-        
-       /* let fetchOperation = CKQueryOperation(query: query)
-        
-        fetchOperation.recordFetchedBlock = { record in
-            results.append(record)
-            print("DEBUG: resuls from the CKQuery operation = \(results)")
-        }
-        
-        fetchOperation.queryCompletionBlock = {
-            completion(results, nil)
-        }
-        
-        ArendK9DB.share.privateDB.add(fetchOperation)*/
-        
         ArendK9DB.share.privateDB.perform(query, inZoneWith: ArendK9DB.share.zoneID, completionHandler: {(records: [CKRecord]?, e: Error?)  in
             if e != nil {
                 print(e?.localizedDescription ?? "General Query Error: No Description")
@@ -369,36 +348,12 @@ class Pet: NSObject, NSCoding {
             }
         }
         
-        //saveOperation.modifyRecordsCompletionBlock = {
-        
         saveOperation.completionBlock = {
             print("DEBUG In the completion block therefore isFinished is \(saveOperation.isFinished) at \(Date())")
             completion(saveOperation.isFinished, nil)
-            /*print("DEBUG to test the save, I captured teh record names as \(savedRecordNames)")
-            print("DEBUG All the records are saved so I am going for the new fetch!")
-            //Grab the new, updated list of CKRecords
-            fetchFromCloud(){ (results , error) -> () in
-                print("DEBUG This is where I need to load in the new array of pets from CloudKit and the array is \(results)")
-                if error != nil {
-                    print(error?.localizedDescription ?? "General Query Error: No Description")
-                } else {
-                    for record in results {
-                        if let pet = Pet(remoteRecord: record) {
-                            pets.append(pet)
-                        }
-                    }
-                    //Save this new array locally
-                    print("DEGUG Saving records to local store")
-                    pets[0].saveToLocal(petsToSave: self.pets)
-                    print("DEBUG I have a new pet array from CloudKit \(pets)")
-                    completion(pets, nil)
-                }
-            }*/
             
         }
-        
         ArendK9DB.share.privateDB.add(saveOperation)
-        
     }
     
     //MARK: Save function for a single Pet to CloudKit
